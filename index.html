@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P E2EE Chat</title>
+    <title>P2P E2EE Chat with QR Codes</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
             --primary-color: #4a6fa5;
@@ -12,6 +13,9 @@
             --message-self: #e3f2fd;
             --message-other: #ffffff;
             --border-color: #ddd;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
         }
         
         * {
@@ -129,6 +133,9 @@
             border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .contact-item:hover {
@@ -139,6 +146,10 @@
             background-color: var(--message-self);
         }
         
+        .contact-info {
+            flex: 1;
+        }
+        
         .contact-name {
             font-weight: bold;
             margin-bottom: 5px;
@@ -147,6 +158,19 @@
         .contact-ip {
             font-size: 0.9em;
             color: #666;
+        }
+        
+        .contact-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .contact-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: var(--primary-color);
         }
         
         .add-contact-btn {
@@ -250,7 +274,57 @@
             justify-content: center;
         }
         
-        /* Add Contact Modal */
+        /* QR Code View */
+        #qrView {
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .qr-container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .qr-code {
+            margin: 20px auto;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .qr-instructions {
+            margin: 20px 0;
+            color: #666;
+        }
+        
+        .qr-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .qr-action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #e0e0e0;
+        }
+        
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -273,7 +347,9 @@
             padding: 20px;
             border-radius: 8px;
             width: 90%;
-            max-width: 400px;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .modal-header {
@@ -290,34 +366,62 @@
             cursor: pointer;
         }
         
-        .modal-body input {
+        .modal-body {
+            margin-bottom: 15px;
+        }
+        
+        .modal-body input, .modal-body textarea {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
+            font-size: 16px;
         }
         
         .modal-footer {
             display: flex;
             justify-content: flex-end;
+            gap: 10px;
         }
         
         .modal-footer button {
             padding: 8px 15px;
-            margin-left: 10px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
         
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
+        /* Scanner */
+        #scannerView {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
         }
         
-        .btn-secondary {
-            background-color: #e0e0e0;
+        #scannerView.active {
+            display: flex;
+        }
+        
+        #qrScanner {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            margin: 20px 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+        }
+        
+        .scanner-instructions {
+            margin: 20px 0;
+            text-align: center;
+            color: #666;
         }
         
         /* Status indicators */
@@ -329,18 +433,59 @@
         }
         
         .status.connected {
-            background-color: #4caf50;
+            background-color: var(--success-color);
             color: white;
         }
         
         .status.connecting {
-            background-color: #ff9800;
+            background-color: var(--warning-color);
             color: white;
         }
         
         .status.disconnected {
-            background-color: #f44336;
+            background-color: var(--error-color);
             color: white;
+        }
+        
+        /* Connection info */
+        .connection-info {
+            background-color: #f9f9f9;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .notification.success {
+            background-color: var(--success-color);
+        }
+        
+        .notification.error {
+            background-color: var(--error-color);
+        }
+        
+        .notification.warning {
+            background-color: var(--warning-color);
         }
     </style>
 </head>
@@ -348,12 +493,14 @@
     <div class="container">
         <header>
             <h1>P2P E2EE Chat</h1>
+            <p>Secure peer-to-peer messaging with QR code connections</p>
         </header>
         
         <!-- Password View -->
         <div id="passwordView" class="view active">
             <div class="password-form">
                 <h2>Enter Encryption Password</h2>
+                <p class="qr-instructions">This password will encrypt your messages and contacts.</p>
                 <input type="password" id="passwordInput" placeholder="Enter your password">
                 <button id="passwordSubmit">Unlock</button>
             </div>
@@ -385,6 +532,33 @@
                 <button class="send-btn" id="sendBtn">➤</button>
             </div>
         </div>
+        
+        <!-- QR Code View -->
+        <div id="qrView" class="view">
+            <div class="qr-container">
+                <h2>Share Your Connection</h2>
+                <p class="qr-instructions">Scan this QR code with the other person's device to connect securely.</p>
+                <div id="qrCode" class="qr-code"></div>
+                <div class="connection-info">
+                    <strong>Your Connection Info:</strong><br>
+                    <span id="connectionDetails">Loading...</span>
+                </div>
+                <div class="qr-actions">
+                    <button class="qr-action-btn btn-secondary" id="backFromQRBtn">Back to Contacts</button>
+                    <button class="qr-action-btn btn-primary" id="scanQRBtn">Scan QR Code</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- QR Scanner View -->
+        <div id="scannerView" class="view">
+            <h2>Scan QR Code</h2>
+            <p class="scanner-instructions">Point your camera at the QR code to scan it.</p>
+            <div id="qrScanner">Camera access required for scanning</div>
+            <div class="qr-actions">
+                <button class="qr-action-btn btn-secondary" id="cancelScanBtn">Cancel</button>
+            </div>
+        </div>
     </div>
     
     <!-- Add Contact Modal -->
@@ -396,7 +570,14 @@
             </div>
             <div class="modal-body">
                 <input type="text" id="contactNameInput" placeholder="Contact Name">
-                <input type="text" id="contactIpInput" placeholder="IP Address">
+                <p>Choose connection method:</p>
+                <div class="qr-actions">
+                    <button class="qr-action-btn btn-primary" id="generateQRBtn">Generate QR Code</button>
+                    <button class="qr-action-btn btn-secondary" id="manualEntryBtn">Manual Entry</button>
+                </div>
+                <div id="manualEntrySection" style="display: none;">
+                    <textarea id="contactDataInput" placeholder="Paste connection data or IP address"></textarea>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancelAddContact">Cancel</button>
@@ -404,6 +585,27 @@
             </div>
         </div>
     </div>
+    
+    <!-- Connection Details Modal -->
+    <div class="modal" id="connectionDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Connection Details</h3>
+                <button class="close-modal" id="closeConnectionModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Share these details with your contact to establish a connection:</p>
+                <div class="connection-info" id="connectionInfoText"></div>
+                <div id="connectionQRCode" class="qr-code" style="text-align: center;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeConnectionDetails">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notification" class="notification"></div>
 
     <script>
         // Simple encryption/decryption using Web Crypto API
@@ -499,23 +701,92 @@
             }
         }
 
+        // QR Code and connection management
+        class ConnectionManager {
+            constructor() {
+                this.connectionData = this.generateConnectionData();
+            }
+            
+            generateConnectionData() {
+                // Generate a unique identifier for this peer
+                const peerId = this.generatePeerId();
+                
+                // Get the current timestamp
+                const timestamp = Date.now();
+                
+                // In a real app, you would include WebRTC connection details here
+                return {
+                    peerId: peerId,
+                    timestamp: timestamp,
+                    version: "1.0"
+                };
+            }
+            
+            generatePeerId() {
+                // Generate a random peer ID
+                return 'peer-' + Math.random().toString(36).substring(2, 15) + 
+                       Math.random().toString(36).substring(2, 15);
+            }
+            
+            getConnectionString() {
+                return JSON.stringify(this.connectionData);
+            }
+            
+            parseConnectionString(connectionString) {
+                try {
+                    return JSON.parse(connectionString);
+                } catch (e) {
+                    console.error("Error parsing connection string:", e);
+                    return null;
+                }
+            }
+            
+            generateQRCode(elementId, data) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = "";
+                    QRCode.toCanvas(element, data, {
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            }
+            
+            // Simulate WebRTC connection establishment
+            async establishConnection(remoteConnectionData) {
+                // In a real app, this would set up a WebRTC connection
+                // For this demo, we'll simulate the process
+                
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // Simulate connection success (70% chance)
+                        const success = Math.random() > 0.3;
+                        resolve(success);
+                    }, 2000);
+                });
+            }
+        }
+
         // Main application class
         class P2PChatApp {
             constructor() {
                 this.crypto = null;
+                this.connectionManager = new ConnectionManager();
                 this.contacts = [];
                 this.currentContact = null;
                 this.peerConnection = null;
                 this.dataChannel = null;
-                this.localStream = null;
                 
                 this.initializeApp();
                 this.setupEventListeners();
             }
             
             initializeApp() {
-                // Check if we have stored contacts
-                this.loadContacts();
+                // Display connection details
+                this.updateConnectionDetails();
             }
             
             setupEventListeners() {
@@ -550,6 +821,20 @@
                     }
                 });
                 
+                // QR Code view
+                document.getElementById('backFromQRBtn').addEventListener('click', () => {
+                    this.showContactsView();
+                });
+                
+                document.getElementById('scanQRBtn').addEventListener('click', () => {
+                    this.showScannerView();
+                });
+                
+                // Scanner view
+                document.getElementById('cancelScanBtn').addEventListener('click', () => {
+                    this.showQRView();
+                });
+                
                 // Add contact modal
                 document.getElementById('closeModal').addEventListener('click', () => {
                     this.hideAddContactModal();
@@ -559,15 +844,32 @@
                     this.hideAddContactModal();
                 });
                 
+                document.getElementById('generateQRBtn').addEventListener('click', () => {
+                    this.showQRGeneration();
+                });
+                
+                document.getElementById('manualEntryBtn').addEventListener('click', () => {
+                    this.showManualEntry();
+                });
+                
                 document.getElementById('saveContact').addEventListener('click', () => {
                     this.addNewContact();
+                });
+                
+                // Connection details modal
+                document.getElementById('closeConnectionModal').addEventListener('click', () => {
+                    this.hideConnectionDetailsModal();
+                });
+                
+                document.getElementById('closeConnectionDetails').addEventListener('click', () => {
+                    this.hideConnectionDetailsModal();
                 });
             }
             
             async unlockApp() {
                 const password = document.getElementById('passwordInput').value;
                 if (!password) {
-                    alert('Please enter a password');
+                    this.showNotification('Please enter a password', 'error');
                     return;
                 }
                 
@@ -577,15 +879,18 @@
                 const testText = "test";
                 const encrypted = await this.crypto.encrypt(testText);
                 if (!encrypted) {
-                    alert('Error initializing encryption');
+                    this.showNotification('Error initializing encryption', 'error');
                     return;
                 }
                 
                 const decrypted = await this.crypto.decrypt(encrypted);
                 if (decrypted !== testText) {
-                    alert('Password verification failed');
+                    this.showNotification('Password verification failed', 'error');
                     return;
                 }
+                
+                // Load contacts
+                await this.loadContacts();
                 
                 // If we have contacts, show contacts view, otherwise show add contact
                 if (this.contacts.length > 0) {
@@ -598,6 +903,8 @@
             showContactsView() {
                 document.getElementById('passwordView').classList.remove('active');
                 document.getElementById('chatView').classList.remove('active');
+                document.getElementById('qrView').classList.remove('active');
+                document.getElementById('scannerView').classList.remove('active');
                 document.getElementById('contactsView').classList.add('active');
                 
                 this.renderContacts();
@@ -606,6 +913,8 @@
             showChatView(contact) {
                 this.currentContact = contact;
                 document.getElementById('contactsView').classList.remove('active');
+                document.getElementById('qrView').classList.remove('active');
+                document.getElementById('scannerView').classList.remove('active');
                 document.getElementById('chatView').classList.add('active');
                 
                 document.getElementById('chatContactName').textContent = contact.name;
@@ -615,36 +924,133 @@
                 this.initiateConnection();
             }
             
+            showQRView() {
+                document.getElementById('contactsView').classList.remove('active');
+                document.getElementById('chatView').classList.remove('active');
+                document.getElementById('scannerView').classList.remove('active');
+                document.getElementById('qrView').classList.add('active');
+                
+                // Generate QR code with connection data
+                const connectionString = this.connectionManager.getConnectionString();
+                this.connectionManager.generateQRCode('qrCode', connectionString);
+            }
+            
+            showScannerView() {
+                document.getElementById('qrView').classList.remove('active');
+                document.getElementById('scannerView').classList.add('active');
+                
+                // In a real app, you would initialize a QR scanner here
+                // For this demo, we'll simulate scanning after a delay
+                setTimeout(() => {
+                    this.simulateQRScan();
+                }, 3000);
+            }
+            
+            simulateQRScan() {
+                // Simulate scanning a QR code
+                const simulatedData = JSON.stringify({
+                    peerId: 'simulated-peer',
+                    timestamp: Date.now(),
+                    version: "1.0"
+                });
+                
+                this.processScannedQRCode(simulatedData);
+            }
+            
+            processScannedQRCode(data) {
+                const connectionData = this.connectionManager.parseConnectionString(data);
+                if (!connectionData) {
+                    this.showNotification('Invalid QR code data', 'error');
+                    this.showQRView();
+                    return;
+                }
+                
+                // Create a new contact from the scanned data
+                const newContact = {
+                    id: Date.now().toString(),
+                    name: `Contact ${this.contacts.length + 1}`,
+                    connectionData: connectionData,
+                    messages: [],
+                    connected: false
+                };
+                
+                this.contacts.push(newContact);
+                this.saveContacts();
+                this.showContactsView();
+                this.showNotification('Contact added successfully!', 'success');
+            }
+            
             showAddContactModal() {
                 document.getElementById('addContactModal').classList.add('active');
                 document.getElementById('contactNameInput').value = '';
-                document.getElementById('contactIpInput').value = '';
+                document.getElementById('contactDataInput').value = '';
+                document.getElementById('manualEntrySection').style.display = 'none';
             }
             
             hideAddContactModal() {
                 document.getElementById('addContactModal').classList.remove('active');
             }
             
+            showQRGeneration() {
+                document.getElementById('manualEntrySection').style.display = 'none';
+                // The QR generation will happen when the modal is closed
+            }
+            
+            showManualEntry() {
+                document.getElementById('manualEntrySection').style.display = 'block';
+            }
+            
+            showConnectionDetailsModal() {
+                const connectionString = this.connectionManager.getConnectionString();
+                document.getElementById('connectionInfoText').textContent = connectionString;
+                
+                // Generate QR code for connection details
+                this.connectionManager.generateQRCode('connectionQRCode', connectionString);
+                
+                document.getElementById('connectionDetailsModal').classList.add('active');
+            }
+            
+            hideConnectionDetailsModal() {
+                document.getElementById('connectionDetailsModal').classList.remove('active');
+            }
+            
             addNewContact() {
                 const name = document.getElementById('contactNameInput').value;
-                const ip = document.getElementById('contactIpInput').value;
+                const dataInput = document.getElementById('contactDataInput').value;
                 
-                if (!name || !ip) {
-                    alert('Please enter both name and IP address');
+                if (!name) {
+                    this.showNotification('Please enter a contact name', 'error');
                     return;
                 }
                 
-                // Simple IP validation
-                if (!this.isValidIP(ip)) {
-                    alert('Please enter a valid IP address');
-                    return;
+                let connectionData = null;
+                
+                // Check if we're using manual entry
+                if (dataInput) {
+                    connectionData = this.connectionManager.parseConnectionString(dataInput);
+                    if (!connectionData) {
+                        // Try to parse as IP address
+                        if (this.isValidIP(dataInput)) {
+                            connectionData = {
+                                ip: dataInput,
+                                timestamp: Date.now()
+                            };
+                        } else {
+                            this.showNotification('Invalid connection data', 'error');
+                            return;
+                        }
+                    }
+                } else {
+                    // Generate new connection data for QR code sharing
+                    connectionData = this.connectionManager.generateConnectionData();
                 }
                 
                 const newContact = {
                     id: Date.now().toString(),
                     name: name,
-                    ip: ip,
-                    messages: []
+                    connectionData: connectionData,
+                    messages: [],
+                    connected: false
                 };
                 
                 this.contacts.push(newContact);
@@ -652,14 +1058,21 @@
                 this.renderContacts();
                 this.hideAddContactModal();
                 
+                // Show connection details if we're generating a QR code
+                if (!dataInput) {
+                    this.showConnectionDetailsModal();
+                }
+                
                 // If this is the first contact, show contacts view
                 if (document.getElementById('passwordView').classList.contains('active')) {
                     this.showContactsView();
                 }
+                
+                this.showNotification('Contact added successfully!', 'success');
             }
             
             isValidIP(ip) {
-                // Simple IP validation - in a real app, you'd want more robust validation
+                // Simple IP validation
                 const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
                 return ipRegex.test(ip);
             }
@@ -668,13 +1081,38 @@
                 const contactsList = document.getElementById('contactsList');
                 contactsList.innerHTML = '';
                 
+                if (this.contacts.length === 0) {
+                    contactsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No contacts yet. Add a contact to start chatting.</div>';
+                    return;
+                }
+                
                 this.contacts.forEach(contact => {
                     const contactElement = document.createElement('div');
                     contactElement.className = 'contact-item';
                     contactElement.innerHTML = `
-                        <div class="contact-name">${contact.name}</div>
-                        <div class="contact-ip">${contact.ip}</div>
+                        <div class="contact-info">
+                            <div class="contact-name">${contact.name}</div>
+                            <div class="contact-ip">${contact.connectionData.ip || 'QR Connection'}</div>
+                        </div>
+                        <div class="contact-actions">
+                            <button class="contact-action-btn" title="Connection Details">🔗</button>
+                            <button class="contact-action-btn" title="Chat">💬</button>
+                        </div>
                     `;
+                    
+                    // Add event listeners to action buttons
+                    const detailsBtn = contactElement.querySelector('.contact-actions button:nth-child(1)');
+                    const chatBtn = contactElement.querySelector('.contact-actions button:nth-child(2)');
+                    
+                    detailsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.showContactDetails(contact);
+                    });
+                    
+                    chatBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.showChatView(contact);
+                    });
                     
                     contactElement.addEventListener('click', () => {
                         this.showChatView(contact);
@@ -684,11 +1122,25 @@
                 });
             }
             
+            showContactDetails(contact) {
+                this.currentContact = contact;
+                this.showConnectionDetailsModal();
+            }
+            
             renderMessages() {
                 const chatMessages = document.getElementById('chatMessages');
                 chatMessages.innerHTML = '';
                 
                 if (!this.currentContact) return;
+                
+                if (this.currentContact.messages.length === 0) {
+                    chatMessages.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #666;">
+                            No messages yet. Start a conversation!
+                        </div>
+                    `;
+                    return;
+                }
                 
                 this.currentContact.messages.forEach(msg => {
                     const messageElement = document.createElement('div');
@@ -717,7 +1169,7 @@
                 // Encrypt the message
                 const encryptedText = await this.crypto.encrypt(text);
                 if (!encryptedText) {
-                    alert('Error encrypting message');
+                    this.showNotification('Error encrypting message', 'error');
                     return;
                 }
                 
@@ -742,6 +1194,7 @@
                     }));
                 } else {
                     this.updateConnectionStatus('disconnected');
+                    this.showNotification('Not connected to peer', 'warning');
                 }
                 
                 input.value = '';
@@ -773,33 +1226,33 @@
             
             // WebRTC connection setup (simplified)
             async initiateConnection() {
-                // In a real P2P app, you'd need a signaling server to exchange SDP offers/answers
-                // For this demo, we'll simulate the connection process
+                if (!this.currentContact) return;
                 
                 this.updateConnectionStatus('connecting');
                 
-                // Simulate connection process
-                setTimeout(() => {
-                    // In a real app, this would be based on actual WebRTC connection state
-                    const isConnected = Math.random() > 0.3; // 70% chance of "success"
+                // Try to establish connection using the contact's connection data
+                const success = await this.connectionManager.establishConnection(
+                    this.currentContact.connectionData
+                );
+                
+                if (success) {
+                    this.updateConnectionStatus('connected');
+                    this.currentContact.connected = true;
+                    this.showNotification('Connected to peer', 'success');
                     
-                    if (isConnected) {
-                        this.updateConnectionStatus('connected');
-                        
-                        // Set up a simulated data channel
-                        this.setupSimulatedDataChannel();
-                    } else {
-                        this.updateConnectionStatus('disconnected');
-                        alert('Failed to connect to peer. Please try again.');
-                    }
-                }, 2000);
+                    // Set up a simulated data channel
+                    this.setupSimulatedDataChannel();
+                } else {
+                    this.updateConnectionStatus('disconnected');
+                    this.showNotification('Failed to connect to peer', 'error');
+                }
             }
             
             setupSimulatedDataChannel() {
                 // In a real app, this would be a real WebRTC data channel
                 // For this demo, we'll simulate message reception
                 setInterval(() => {
-                    if (this.dataChannel && Math.random() > 0.9) { // 10% chance of receiving a message
+                    if (this.currentContact && this.currentContact.connected && Math.random() > 0.9) {
                         const messages = [
                             "Hello!",
                             "How are you?",
@@ -824,15 +1277,21 @@
                 statusElement.className = `status ${status}`;
             }
             
+            updateConnectionDetails() {
+                const connectionString = this.connectionManager.getConnectionString();
+                document.getElementById('connectionDetails').textContent = connectionString;
+            }
+            
             // Local storage management
-            saveContacts() {
+            async saveContacts() {
                 if (!this.crypto) return;
                 
                 // Encrypt contacts before saving
                 const contactsJson = JSON.stringify(this.contacts);
-                this.crypto.encrypt(contactsJson).then(encrypted => {
+                const encrypted = await this.crypto.encrypt(contactsJson);
+                if (encrypted) {
                     localStorage.setItem('p2pChatContacts', encrypted);
-                });
+                }
             }
             
             async loadContacts() {
@@ -843,6 +1302,17 @@
                         this.contacts = JSON.parse(decrypted);
                     }
                 }
+            }
+            
+            // Notification system
+            showNotification(message, type) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
             }
         }
 
