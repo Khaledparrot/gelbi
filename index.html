@@ -1089,10 +1089,19 @@
                 this.contacts.forEach(contact => {
                     const contactElement = document.createElement('div');
                     contactElement.className = 'contact-item';
+                    
+                    // Safely get connection info
+                    let connectionInfo = 'QR Connection';
+                    if (contact.connectionData && contact.connectionData.ip) {
+                        connectionInfo = contact.connectionData.ip;
+                    } else if (contact.connectionData && contact.connectionData.peerId) {
+                        connectionInfo = `Peer: ${contact.connectionData.peerId.substring(0, 8)}...`;
+                    }
+                    
                     contactElement.innerHTML = `
                         <div class="contact-info">
                             <div class="contact-name">${contact.name}</div>
-                            <div class="contact-ip">${contact.connectionData.ip || 'QR Connection'}</div>
+                            <div class="contact-ip">${connectionInfo}</div>
                         </div>
                         <div class="contact-actions">
                             <button class="contact-action-btn" title="Connection Details">🔗</button>
