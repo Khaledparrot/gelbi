@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P E2EE Chat</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --background-color: #f5f7fa;
+            --message-self: #e3f2fd;
+            --message-other: #ffffff;
+            --border-color: #ddd;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .view.active {
+            display: flex;
+        }
+        
+        /* Password View */
+        #passwordView {
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .password-form {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .password-form h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        
+        .password-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .password-form button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .password-form button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        /* Contacts View */
+        #contactsView {
+            padding: 0;
+        }
+        
+        .contacts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .contact-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .contact-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .contact-item.active {
+            background-color: var(--message-self);
+        }
+        
+        .contact-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .contact-ip {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .add-contact-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Chat View */
+        #chatView {
+            padding: 0;
+        }
+        
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        
+        .message.self {
+            align-self: flex-end;
+            background-color: var(--message-self);
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.other {
+            align-self: flex-start;
+            background-color: var(--message-other);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 0.7em;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .send-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Add Contact Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-body input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .modal-footer button {
+            padding: 8px 15px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #e0e0e0;
+        }
+        
+        /* Status indicators */
+        .status {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 10px;
+        }
+        
+        .status.connected {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .status.connecting {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .status.disconnected {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>P2P E2EE Chat</h1>
+        </header>
+        
+        <!-- Password View -->
+        <div id="passwordView" class="view active">
+            <div class="password-form">
+                <h2>Enter Encryption Password</h2>
+                <input type="password" id="passwordInput" placeholder="Enter your password">
+                <button id="passwordSubmit">Unlock</button>
+            </div>
+        </div>
+        
+        <!-- Contacts View -->
+        <div id="contactsView" class="view">
+            <div class="contacts-header">
+                <h2>Contacts</h2>
+                <button class="add-contact-btn" id="addContactBtn">+</button>
+            </div>
+            <div class="contacts-list" id="contactsList">
+                <!-- Contacts will be populated here -->
+            </div>
+        </div>
+        
+        <!-- Chat View -->
+        <div id="chatView" class="view">
+            <div class="chat-header">
+                <button class="back-btn" id="backBtn">←</button>
+                <h2 id="chatContactName">Contact Name</h2>
+                <span class="status disconnected" id="connectionStatus">Disconnected</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be populated here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="messageInput" placeholder="Type a message...">
+                <button class="send-btn" id="sendBtn">➤</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Contact Modal -->
+    <div class="modal" id="addContactModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Contact</h3>
+                <button class="close-modal" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="contactNameInput" placeholder="Contact Name">
+                <input type="text" id="contactIpInput" placeholder="IP Address">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelAddContact">Cancel</button>
+                <button class="btn-primary" id="saveContact">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple encryption/decryption using Web Crypto API
+        class SimpleCrypto {
+            constructor(password) {
+                this.password = password;
+            }
+            
+            async deriveKey() {
+                const encoder = new TextEncoder();
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    "raw",
+                    encoder.encode(this.password),
+                    "PBKDF2",
+                    false,
+                    ["deriveKey"]
+                );
+                
+                return await window.crypto.subtle.deriveKey(
+                    {
+                        name: "PBKDF2",
+                        salt: encoder.encode("simple-salt"),
+                        iterations: 100000,
+                        hash: "SHA-256"
+                    },
+                    keyMaterial,
+                    { name: "AES-GCM", length: 256 },
+                    false,
+                    ["encrypt", "decrypt"]
+                );
+            }
+            
+            async encrypt(text) {
+                try {
+                    const key = await this.deriveKey();
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(text);
+                    
+                    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                    
+                    const encrypted = await window.crypto.subtle.encrypt(
+                        {
+                            name: "AES-GCM",
+                            iv: iv
+                        },
+                        key,
+                        data
+                    );
+                    
+                    // Combine iv and encrypted data
+                    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+                    combined.set(iv, 0);
+                    combined.set(new Uint8Array(encrypted), iv.length);
+                    
+                    // Convert to base64 for storage
+                    return btoa(String.fromCharCode(...combined));
+                } catch (error) {
+                    console.error("Encryption error:", error);
+                    return null;
+                }
+            }
+            
+            async decrypt(encryptedData) {
+                try {
+                    const key = await this.deriveKey();
+                    
+                    // Convert from base64
+                    const binaryData = atob(encryptedData);
+                    const data = new Uint8Array(binaryData.length);
+                    for (let i = 0; i < binaryData.length; i++) {
+                        data[i] = binaryData.charCodeAt(i);
+                    }
+                    
+                    // Extract iv and encrypted data
+                    const iv = data.slice(0, 12);
+                    const encrypted = data.slice(12);
+                    
+                    const decrypted = await window.crypto.subtle.decrypt(
+                        {
+                            name: "AES-GCM",
+                            iv: iv
+                        },
+                        key,
+                        encrypted
+                    );
+                    
+                    const decoder = new TextDecoder();
+                    return decoder.decode(decrypted);
+                } catch (error) {
+                    console.error("Decryption error:", error);
+                    return null;
+                }
+            }
+        }
+
+        // Main application class
+        class P2PChatApp {
+            constructor() {
+                this.crypto = null;
+                this.contacts = [];
+                this.currentContact = null;
+                this.peerConnection = null;
+                this.dataChannel = null;
+                this.localStream = null;
+                
+                this.initializeApp();
+                this.setupEventListeners();
+            }
+            
+            initializeApp() {
+                // Check if we have stored contacts
+                this.loadContacts();
+            }
+            
+            setupEventListeners() {
+                // Password view
+                document.getElementById('passwordSubmit').addEventListener('click', () => {
+                    this.unlockApp();
+                });
+                
+                document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.unlockApp();
+                    }
+                });
+                
+                // Contacts view
+                document.getElementById('addContactBtn').addEventListener('click', () => {
+                    this.showAddContactModal();
+                });
+                
+                // Chat view
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    this.showContactsView();
+                });
+                
+                document.getElementById('sendBtn').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+                
+                document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+                
+                // Add contact modal
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    this.hideAddContactModal();
+                });
+                
+                document.getElementById('cancelAddContact').addEventListener('click', () => {
+                    this.hideAddContactModal();
+                });
+                
+                document.getElementById('saveContact').addEventListener('click', () => {
+                    this.addNewContact();
+                });
+            }
+            
+            async unlockApp() {
+                const password = document.getElementById('passwordInput').value;
+                if (!password) {
+                    alert('Please enter a password');
+                    return;
+                }
+                
+                this.crypto = new SimpleCrypto(password);
+                
+                // Test encryption/decryption to verify password is correct
+                const testText = "test";
+                const encrypted = await this.crypto.encrypt(testText);
+                if (!encrypted) {
+                    alert('Error initializing encryption');
+                    return;
+                }
+                
+                const decrypted = await this.crypto.decrypt(encrypted);
+                if (decrypted !== testText) {
+                    alert('Password verification failed');
+                    return;
+                }
+                
+                // If we have contacts, show contacts view, otherwise show add contact
+                if (this.contacts.length > 0) {
+                    this.showContactsView();
+                } else {
+                    this.showAddContactModal();
+                }
+            }
+            
+            showContactsView() {
+                document.getElementById('passwordView').classList.remove('active');
+                document.getElementById('chatView').classList.remove('active');
+                document.getElementById('contactsView').classList.add('active');
+                
+                this.renderContacts();
+            }
+            
+            showChatView(contact) {
+                this.currentContact = contact;
+                document.getElementById('contactsView').classList.remove('active');
+                document.getElementById('chatView').classList.add('active');
+                
+                document.getElementById('chatContactName').textContent = contact.name;
+                this.renderMessages();
+                
+                // Initialize connection
+                this.initiateConnection();
+            }
+            
+            showAddContactModal() {
+                document.getElementById('addContactModal').classList.add('active');
+                document.getElementById('contactNameInput').value = '';
+                document.getElementById('contactIpInput').value = '';
+            }
+            
+            hideAddContactModal() {
+                document.getElementById('addContactModal').classList.remove('active');
+            }
+            
+            addNewContact() {
+                const name = document.getElementById('contactNameInput').value;
+                const ip = document.getElementById('contactIpInput').value;
+                
+                if (!name || !ip) {
+                    alert('Please enter both name and IP address');
+                    return;
+                }
+                
+                // Simple IP validation
+                if (!this.isValidIP(ip)) {
+                    alert('Please enter a valid IP address');
+                    return;
+                }
+                
+                const newContact = {
+                    id: Date.now().toString(),
+                    name: name,
+                    ip: ip,
+                    messages: []
+                };
+                
+                this.contacts.push(newContact);
+                this.saveContacts();
+                this.renderContacts();
+                this.hideAddContactModal();
+                
+                // If this is the first contact, show contacts view
+                if (document.getElementById('passwordView').classList.contains('active')) {
+                    this.showContactsView();
+                }
+            }
+            
+            isValidIP(ip) {
+                // Simple IP validation - in a real app, you'd want more robust validation
+                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+                return ipRegex.test(ip);
+            }
+            
+            renderContacts() {
+                const contactsList = document.getElementById('contactsList');
+                contactsList.innerHTML = '';
+                
+                this.contacts.forEach(contact => {
+                    const contactElement = document.createElement('div');
+                    contactElement.className = 'contact-item';
+                    contactElement.innerHTML = `
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-ip">${contact.ip}</div>
+                    `;
+                    
+                    contactElement.addEventListener('click', () => {
+                        this.showChatView(contact);
+                    });
+                    
+                    contactsList.appendChild(contactElement);
+                });
+            }
+            
+            renderMessages() {
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = '';
+                
+                if (!this.currentContact) return;
+                
+                this.currentContact.messages.forEach(msg => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `message ${msg.sender === 'self' ? 'self' : 'other'}`;
+                    
+                    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    messageElement.innerHTML = `
+                        <div>${msg.text}</div>
+                        <div class="message-time">${time}</div>
+                    `;
+                    
+                    chatMessages.appendChild(messageElement);
+                });
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            async sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                
+                if (!text || !this.currentContact) return;
+                
+                // Encrypt the message
+                const encryptedText = await this.crypto.encrypt(text);
+                if (!encryptedText) {
+                    alert('Error encrypting message');
+                    return;
+                }
+                
+                // Add to local messages
+                const message = {
+                    id: Date.now().toString(),
+                    text: text,
+                    encryptedText: encryptedText,
+                    sender: 'self',
+                    timestamp: Date.now()
+                };
+                
+                this.currentContact.messages.push(message);
+                this.saveContacts();
+                this.renderMessages();
+                
+                // Send via data channel if connected
+                if (this.dataChannel && this.dataChannel.readyState === 'open') {
+                    this.dataChannel.send(JSON.stringify({
+                        type: 'message',
+                        data: encryptedText
+                    }));
+                } else {
+                    this.updateConnectionStatus('disconnected');
+                }
+                
+                input.value = '';
+            }
+            
+            async receiveMessage(encryptedText) {
+                if (!this.currentContact || !this.crypto) return;
+                
+                // Decrypt the message
+                const decryptedText = await this.crypto.decrypt(encryptedText);
+                if (!decryptedText) {
+                    console.error('Error decrypting message');
+                    return;
+                }
+                
+                // Add to messages
+                const message = {
+                    id: Date.now().toString(),
+                    text: decryptedText,
+                    encryptedText: encryptedText,
+                    sender: 'other',
+                    timestamp: Date.now()
+                };
+                
+                this.currentContact.messages.push(message);
+                this.saveContacts();
+                this.renderMessages();
+            }
+            
+            // WebRTC connection setup (simplified)
+            async initiateConnection() {
+                // In a real P2P app, you'd need a signaling server to exchange SDP offers/answers
+                // For this demo, we'll simulate the connection process
+                
+                this.updateConnectionStatus('connecting');
+                
+                // Simulate connection process
+                setTimeout(() => {
+                    // In a real app, this would be based on actual WebRTC connection state
+                    const isConnected = Math.random() > 0.3; // 70% chance of "success"
+                    
+                    if (isConnected) {
+                        this.updateConnectionStatus('connected');
+                        
+                        // Set up a simulated data channel
+                        this.setupSimulatedDataChannel();
+                    } else {
+                        this.updateConnectionStatus('disconnected');
+                        alert('Failed to connect to peer. Please try again.');
+                    }
+                }, 2000);
+            }
+            
+            setupSimulatedDataChannel() {
+                // In a real app, this would be a real WebRTC data channel
+                // For this demo, we'll simulate message reception
+                setInterval(() => {
+                    if (this.dataChannel && Math.random() > 0.9) { // 10% chance of receiving a message
+                        const messages = [
+                            "Hello!",
+                            "How are you?",
+                            "This is a test message",
+                            "P2P encryption is cool!",
+                            "What's new?"
+                        ];
+                        
+                        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                        
+                        // Simulate receiving an encrypted message
+                        this.crypto.encrypt(randomMessage).then(encrypted => {
+                            this.receiveMessage(encrypted);
+                        });
+                    }
+                }, 10000);
+            }
+            
+            updateConnectionStatus(status) {
+                const statusElement = document.getElementById('connectionStatus');
+                statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                statusElement.className = `status ${status}`;
+            }
+            
+            // Local storage management
+            saveContacts() {
+                if (!this.crypto) return;
+                
+                // Encrypt contacts before saving
+                const contactsJson = JSON.stringify(this.contacts);
+                this.crypto.encrypt(contactsJson).then(encrypted => {
+                    localStorage.setItem('p2pChatContacts', encrypted);
+                });
+            }
+            
+            async loadContacts() {
+                const encryptedContacts = localStorage.getItem('p2pChatContacts');
+                if (encryptedContacts && this.crypto) {
+                    const decrypted = await this.crypto.decrypt(encryptedContacts);
+                    if (decrypted) {
+                        this.contacts = JSON.parse(decrypted);
+                    }
+                }
+            }
+        }
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.chatApp = new P2PChatApp();
+        });
+    </script>
+</body>
+</html>
