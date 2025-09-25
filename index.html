@@ -58,8 +58,6 @@
     }
     .you { color: #3498db; }
     .peer { color: #2ecc71; }
-    #qrReader { width: 100%; height: 300px; background: #000; display: none; }
-    video { width: 100%; height: 100%; object-fit: cover; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .header-buttons { display: flex; gap: 8px; }
     .back-btn { background: none; border: none; font-size: 18px; color: #3498db; }
@@ -75,7 +73,7 @@
 <body>
   <!-- Password Screen -->
   <div id="passwordScreen" class="screen active">
-    <h1>🔒 Secret Chat v2</h1>
+    <h1>🔒 Secret Chat v552</h1>
     <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
     <button onclick="setPassword()">Enter</button>
     <p style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 14px;">
@@ -128,7 +126,9 @@
       <button class="back-btn" onclick="showMainScreen()">&larr;</button>
       <h1>Scan QR</h1>
     </div>
-    <div id="qrReader"></div>
+    <div id="qrReader" style="width:100%; height:300px; background:#000; margin:10px 0; border-radius:8px; overflow:hidden;">
+      <!-- Camera video will appear here -->
+    </div>
     <button class="btn-secondary" onclick="startScanner()" style="margin-top: 10px;">Start Camera</button>
     <p style="text-align: center; margin-top: 10px; font-size: 13px; color: #7f8c8d;">
       Point your camera at your friend's QR code
@@ -191,7 +191,6 @@
     function showQrScanner() {
       document.getElementById('mainScreen').classList.remove('active');
       document.getElementById('qrScannerScreen').classList.add('active');
-      // Camera starts when user clicks "Start Camera"
     }
 
     function generateMyQr() {
@@ -223,18 +222,17 @@
       }
     }
 
-    let video, canvas, ctx;
+    let video;
     async function startScanner() {
       const qrReader = document.getElementById('qrReader');
-      qrReader.innerHTML = '<video playsinline></video>';
+      qrReader.innerHTML = '<video playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>';
       video = qrReader.querySelector('video');
-      canvas = document.createElement('canvas');
-      ctx = canvas.getContext('2d');
       
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment" } 
+        });
         video.srcObject = stream;
-        video.play();
         requestAnimationFrame(tick);
       } catch (err) {
         alert('Camera access denied: ' + err.message + '\n\nPlease allow camera permission and try again.');
@@ -242,10 +240,13 @@
     }
 
     function tick() {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         canvas.height = video.videoHeight;
         canvas.width = video.videoWidth;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: "dontInvert",
@@ -257,7 +258,9 @@
             if (data.type === 'offer') {
               saveContact(data);
               showMainScreen();
-              video.srcObject.getTracks().forEach(track => track.stop());
+              if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+              }
               return;
             }
           } catch (e) {
