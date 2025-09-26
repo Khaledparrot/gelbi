@@ -1,1282 +1,688 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multi-QR Secret Chat</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <style>
-    /* Modern Reset & Base Styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-    }
-    
-    body {
-      background: linear-gradient(135deg, #1a1f36 0%, #0d0f1a 100%);
-      color: #e2e8f0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    
-    .app-container {
-      background: rgba(26, 32, 44, 0.95);
-      border-radius: 20px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-      width: 100%;
-      max-width: 450px;
-      overflow: hidden;
-      border: 1px solid #2d3748;
-    }
-    
-    .screen {
-      display: none;
-      padding: 30px;
-      flex-direction: column;
-      min-height: 600px;
-    }
-    
-    .active {
-      display: flex;
-    }
-    
-    h1 {
-      text-align: center;
-      margin-bottom: 24px;
-      color: #f7fafc;
-      font-weight: 700;
-      font-size: 1.8rem;
-    }
-    
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #e2e8f0;
-      font-weight: 600;
-      font-size: 1.4rem;
-    }
-    
-    h3 {
-      text-align: center;
-      margin: 15px 0;
-      color: #e2e8f0;
-      font-weight: 500;
-      font-size: 1.2rem;
-    }
-    
-    .logo {
-      text-align: center;
-      font-size: 3rem;
-      margin-bottom: 15px;
-    }
-    
-    .description {
-      text-align: center;
-      color: #a0aec0;
-      margin-bottom: 30px;
-      line-height: 1.6;
-    }
-    
-    input, button {
-      width: 100%;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      transition: all 0.3s;
-    }
-    
-    input {
-      background: #2d3748;
-      border: 1px solid #4a5568;
-      color: #f7fafc;
-    }
-    
-    input:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-    }
-    
-    button {
-      background: linear-gradient(to right, #667eea, #764ba2);
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3);
-    }
-    
-    button:active {
-      transform: translateY(0);
-    }
-    
-    .btn-secondary {
-      background: #4a5568;
-    }
-    
-    .btn-secondary:hover {
-      background: #2d3748;
-    }
-    
-    .btn-danger {
-      background: #e53e3e;
-    }
-    
-    .btn-danger:hover {
-      background: #c53030;
-    }
-    
-    .btn-small {
-      padding: 10px 16px;
-      font-size: 14px;
-      width: auto;
-    }
-    
-    /* QR Generator Styles */
-    .qr-generator-container {
-      text-align: center;
-      margin: 20px 0;
-      background: rgba(45, 55, 72, 0.7);
-      padding: 20px;
-      border-radius: 15px;
-    }
-    
-    .multi-qr-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-    
-    .qr-part {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .qr-part.active {
-      display: flex;
-    }
-    
-    .qr-progress {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 15px 0;
-    }
-    
-    .progress-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #4a5568;
-      transition: background 0.3s;
-    }
-    
-    .progress-dot.active {
-      background: #48bb78;
-    }
-    
-    .qr-navigation {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      margin-top: 15px;
-    }
-    
-    #myQr {
-      display: inline-block;
-      padding: 15px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-      margin-bottom: 10px;
-    }
-    
-    /* QR Scanner Styles */
-    .qr-scanner-container {
-      text-align: center;
-      margin: 20px 0;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minimal Secure P2P</title>
 
-    #qrReader {
-      width: 100%;
-      height: 400px;
-      background: #1a202c;
-      border-radius: 15px;
-      overflow: hidden;
-      margin: 20px 0;
-      position: relative;
-      border: 2px solid #4a5568;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 0;
-    }
+<!-- QR and QR scanning libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 
-    #qrVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    #qrCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-    }
-
-    #qrGuide {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 280px;
-      height: 280px;
-      border: 4px solid #48bb78;
-      border-radius: 20px;
-      pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { border-color: #48bb78; }
-      50% { border-color: #68d391; box-shadow: 0 0 20px #68d391; }
-      100% { border-color: #48bb78; }
-    }
-
-    #qrGuide::before {
-      content: "↑ Align QR Code Here ↑";
-      position: absolute;
-      top: -45px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      font-size: 18px;
-      font-weight: bold;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.7);
-    }
-    
-    .scan-progress {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 15px 0;
-    }
-    
-    .scan-progress-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #4a5568;
-      transition: background 0.3s;
-    }
-    
-    .scan-progress-dot.active {
-      background: #48bb78;
-    }
-    
-    .scan-progress-dot.completed {
-      background: #68d391;
-    }
-    
-    .scanner-controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
-    }
-    
-    .scanner-status {
-      text-align: center;
-      margin: 15px 0;
-      padding: 10px;
-      border-radius: 8px;
-      background: rgba(45, 55, 72, 0.7);
-    }
-    
-    .scanner-status.scanning {
-      background: rgba(72, 187, 120, 0.2);
-      color: #68d391;
-    }
-    
-    .scanner-status.success {
-      background: rgba(72, 187, 120, 0.3);
-      color: #68d391;
-    }
-    
-    .scanner-status.error {
-      background: rgba(229, 62, 62, 0.3);
-      color: #fc8181;
-    }
-    
-    .scanner-status.partial {
-      background: rgba(237, 137, 54, 0.3);
-      color: #f6ad55;
-    }
-
-    /* Contact List Styles */
-    .contact-list {
-      margin-top: 20px;
-    }
-    
-    .contact-item {
-      background: rgba(45, 55, 72, 0.7);
-      padding: 18px;
-      margin-bottom: 15px;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: transform 0.2s;
-    }
-    
-    .contact-item:hover {
-      transform: translateY(-3px);
-      background: rgba(55, 65, 81, 0.7);
-    }
-    
-    .contact-info {
-      flex: 1;
-    }
-    
-    .contact-name {
-      font-weight: 600;
-      margin-bottom: 5px;
-      color: #f7fafc;
-    }
-    
-    .contact-time {
-      font-size: 13px;
-      color: #a0aec0;
-    }
-    
-    .contact-actions {
-      display: flex;
-      gap: 10px;
-    }
-    
-    /* Chat Styles */
-    .chat-area {
-      flex: 1;
-      background: rgba(45, 55, 72, 0.7);
-      border-radius: 15px;
-      padding: 20px;
-      margin: 20px 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      max-height: 350px;
-    }
-    
-    .message {
-      padding: 12px 16px;
-      border-radius: 18px;
-      margin-bottom: 15px;
-      max-width: 85%;
-      word-wrap: break-word;
-      position: relative;
-    }
-    
-    .message.you {
-      background: linear-gradient(to right, #667eea, #764ba2);
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 5px;
-    }
-    
-    .message.peer {
-      background: #4a5568;
-      color: #f7fafc;
-      align-self: flex-start;
-      border-bottom-left-radius: 5px;
-    }
-    
-    .message.system {
-      background: #2d3748;
-      color: #a0aec0;
-      align-self: center;
-      font-style: italic;
-      font-size: 0.9rem;
-      max-width: 100%;
-      text-align: center;
-    }
-    
-    .message-time {
-      font-size: 0.7rem;
-      opacity: 0.7;
-      margin-top: 5px;
-    }
-    
-    .message-input-container {
-      display: flex;
-      gap: 12px;
-    }
-    
-    .message-input-container input {
-      flex: 1;
-      margin-bottom: 0;
-    }
-    
-    .message-input-container button {
-      width: auto;
-      margin-bottom: 0;
-      padding: 16px 20px;
-      border-radius: 12px;
-    }
-    
-    .status {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 15px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    
-    .status.online {
-      background: rgba(72, 187, 120, 0.2);
-      color: #68d391;
-    }
-    
-    .status.offline {
-      background: rgba(229, 62, 62, 0.2);
-      color: #fc8181;
-    }
-    
-    .status.connecting {
-      background: rgba(237, 137, 54, 0.2);
-      color: #f6ad55;
-    }
-    
-    .nav-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-      gap: 15px;
-    }
-    
-    .nav-buttons button {
-      width: 48%;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #a0aec0;
-    }
-    
-    .empty-state p {
-      margin-bottom: 20px;
-    }
-    
-    .scan-hint {
-      text-align: center;
-      margin-top: 15px;
-      color: #a0aec0;
-      font-size: 14px;
-    }
-  </style>
+<style>
+  /* Minimal centered layout */
+  html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
+  .card{width:100%;max-width:520px;border:1px solid #ddd;padding:16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+  .row{margin:8px 0;display:flex;gap:8px;align-items:center}
+  input,textarea,button{font-size:15px;padding:8px;border:1px solid #bbb;border-radius:6px;width:100%}
+  textarea{height:100px;resize:vertical}
+  button{cursor:pointer}
+  .small{width:auto;padding:8px 12px}
+  .hidden{display:none}
+  .center{text-align:center}
+  .contacts-list{max-height:180px;overflow:auto;border:1px solid #eee;padding:8px;border-radius:6px}
+  .contact-item{padding:6px;border-bottom:1px dashed #eee;display:flex;justify-content:space-between;align-items:center}
+  .status{font-size:13px;color:#666}
+  video{width:100%;border-radius:6px;background:#000}
+  .qr-box{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+</style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Password Screen -->
-    <div id="passwordScreen" class="screen active">
-      <div class="logo">🔐</div>
-      <h1>Multi-QR Secret Chat</h1>
-      <p class="description">Set a master password to encrypt all your chat data securely</p>
-      <input type="password" id="passwordInput" placeholder="Enter your password" autocomplete="off">
-      <button onclick="setPassword()">Continue</button>
-    </div>
+  <div class="wrap">
+    <div class="card" id="app">
+      <!-- Password screen -->
+      <div id="pwScreen">
+        <h3 class="center">Enter your password</h3>
+        <div class="row"><input id="pwInput" type="password" placeholder="Password"></div>
+        <div class="row"><button id="pwBtn">Continue</button></div>
+        <p class="status">Contacts stored locally are encrypted with this password.</p>
+      </div>
 
-    <!-- Contacts Screen -->
-    <div id="contactsScreen" class="screen">
-      <h1>Contacts</h1>
-      <p class="description">Add contacts by scanning their QR codes or share yours</p>
-      
-      <div class="nav-buttons">
-        <button class="btn-secondary" onclick="showQrGenerator()">My QR Code</button>
-        <button onclick="showQrScanner()">Scan QR Code</button>
+      <!-- Method selection -->
+      <div id="methodScreen" class="hidden">
+        <h3 class="center">Choose connection method</h3>
+        <div class="row"><button id="methodCopy" class="small">Copy / Paste</button><button id="methodQr" class="small">Use QR codes</button></div>
+        <div class="row"><button id="goContacts" class="small">Back to Contacts</button></div>
       </div>
-      
-      <div class="contact-list" id="contactsList">
-        <!-- Contacts will be loaded here -->
-      </div>
-      
-      <div id="noContacts" class="empty-state">
-        <p>No contacts yet</p>
-        <p>Scan a QR code to add your first contact</p>
-      </div>
-    </div>
 
-    <!-- QR Generator Screen -->
-    <div id="qrGeneratorScreen" class="screen">
-      <h1>My QR Codes</h1>
-      <p class="description">Share these codes in order with your contact</p>
-      
-      <div class="qr-generator-container">
-        <div class="multi-qr-container">
-          <h3 id="qrPartTitle">Part 1 of 3</h3>
-          
-          <div class="qr-progress">
-            <div class="progress-dot active" id="progress1"></div>
-            <div class="progress-dot" id="progress2"></div>
-            <div class="progress-dot" id="progress3"></div>
-          </div>
-          
-          <div class="qr-part active" id="qrPart1">
-            <div id="myQr1"></div>
-            <p>Scan this QR code first</p>
-          </div>
-          
-          <div class="qr-part" id="qrPart2">
-            <div id="myQr2"></div>
-            <p>Scan this QR code second</p>
-          </div>
-          
-          <div class="qr-part" id="qrPart3">
-            <div id="myQr3"></div>
-            <p>Scan this QR code last</p>
-          </div>
-          
-          <div class="qr-navigation">
-            <button class="btn-secondary" onclick="previousQrPart()" id="prevBtn" style="display:none;">Previous</button>
-            <button onclick="nextQrPart()" id="nextBtn">Next QR</button>
-          </div>
-        </div>
+      <!-- Copy/paste UI -->
+      <div id="copyScreen" class="hidden">
+        <h3 class="center">Copy & Paste connection</h3>
+        <div class="row"><button id="genOfferBtn">Generate my connection (offer)</button></div>
+        <div class="row"><textarea id="offerArea" placeholder="Your offer will appear here"></textarea></div>
+        <div class="row"><p class="center">Peer's answer (paste here):</p></div>
+        <div class="row"><textarea id="answerIn" placeholder="Paste peer answer here"></textarea></div>
+        <div class="row"><button id="acceptAnswerBtn">Accept peer answer</button></div>
+        <div class="row"><button id="copyBackBtn" class="small">Back</button></div>
+        <p class="status">After handshake completes the contact will be saved (encrypted).</p>
       </div>
-      
-      <button class="btn-secondary" onclick="showContactsScreen()">Back to Contacts</button>
-    </div>
 
-    <!-- QR Scanner Screen -->
-    <div id="qrScannerScreen" class="screen">
-      <h1>Multi-QR Scanner</h1>
-      <p class="description">Scan QR codes in the order shown by your contact</p>
-      
-      <div class="qr-scanner-container">
-        <div class="scan-progress">
-          <div class="scan-progress-dot completed" id="scanProgress1">1</div>
-          <div class="scan-progress-dot" id="scanProgress2">2</div>
-          <div class="scan-progress-dot" id="scanProgress3">3</div>
-        </div>
-        
-        <div id="qrReader">
-          <video id="qrVideo" playsinline autoplay muted></video>
-          <canvas id="qrCanvas"></canvas>
-          <div id="qrGuide"></div>
-        </div>
-        
-        <div id="scannerStatus" class="scanner-status">
-          Ready to scan part 1 of 3
-        </div>
-        
-        <div class="scanner-controls">
-          <button id="startScannerBtn" onclick="startScanner()">Start Scanner</button>
-          <button id="flipCameraBtn" class="btn-secondary" onclick="flipCamera()" style="display:none;">Flip Camera</button>
-        </div>
-        
-        <p class="scan-hint">Scan QR codes in the correct order shown by your contact</p>
+      <!-- QR generation/show one-by-one -->
+      <div id="qrGenScreen" class="hidden">
+        <h3 class="center">Show your 4 QR codes (one by one)</h3>
+        <div id="qrGenBox" class="qr-box"></div>
+        <div class="row"><button id="qrNextBtn" class="small">Next</button><button id="qrBackBtn" class="small">Back</button></div>
+        <p class="status">Show codes to peer in order (1 → 4).</p>
       </div>
-      
-      <button class="btn-secondary" onclick="showContactsScreen()">Cancel</button>
-    </div>
 
-    <!-- Chat Screen -->
-    <div id="chatScreen" class="screen">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 id="chatTitle">Chat</h2>
-        <span id="chatStatus" class="status offline">Offline</span>
+      <!-- QR scan flow -->
+      <div id="qrScanScreen" class="hidden">
+        <h3 class="center">Scan 4 QR codes in order</h3>
+        <div id="videoWrap"><video id="scanVideo" playsinline autoplay></video></div>
+        <div class="row"><button id="qrScanStart" class="small">Start Camera</button><button id="qrScanStop" class="small">Stop</button></div>
+        <div class="row"><p id="scanProgress" class="status">Scanned <span id="scannedCount">0</span>/4</p></div>
+        <div class="row"><button id="qrScanBack" class="small">Back</button></div>
       </div>
-      
-      <div class="chat-area" id="chatArea">
-        <div class="empty-state">
-          <p>No messages yet</p>
-          <p>Start a conversation!</p>
-        </div>
+
+      <!-- Contacts list -->
+      <div id="contactsScreen" class="hidden">
+        <h3 class="center">Contacts</h3>
+        <div class="contacts-list" id="contactsList"></div>
+        <div class="row"><button id="addNewBtn">Add new (choose method)</button><button id="logoutBtn" class="small">Logout (clear password)</button></div>
       </div>
-      
-      <div class="message-input-container">
-        <input type="text" id="messageInput" placeholder="Type a message..." disabled>
-        <button onclick="sendMessage()" disabled>Send</button>
+
+      <!-- Chat -->
+      <div id="chatScreen" class="hidden">
+        <h3 id="chatTitle" class="center">Chat</h3>
+        <div id="chatHistory" style="border:1px solid #eee;padding:8px;border-radius:6px;height:200px;overflow:auto"></div>
+        <div class="row"><input id="chatInput" placeholder="Message..."><button id="chatSend" class="small">Send</button></div>
+        <div class="row"><button id="chatClose" class="small">Close Chat</button></div>
+        <p id="connStatus" class="status">Connection status: <span id="connLabel">—</span></p>
       </div>
-      
-      <button class="btn-secondary" onclick="closeChat()">Back to Contacts</button>
+
     </div>
   </div>
 
-  <script>
-    // Global state
-    let MASTER_PASSWORD = null;
-    let CURRENT_CONTACT = null;
-    let PEER_CONNECTION = null;
-    let DATA_CHANNEL = null;
-    let CONTACTS = [];
-    let video = null;
-    let scanActive = false;
-    let currentQrData = null;
-    let qrSize = 200; // Smaller QR codes for multi-part
-    let currentFacingMode = "environment";
-    let scanInterval = null;
-    let canvasContext = null;
-    
-    // Multi-QR state
-    let currentQrPart = 1;
-    let totalQrParts = 3;
-    let scannedParts = {};
-    let qrDataParts = [];
-    
-    // TURN server
-    const TURN_SERVER = {
-      urls: "turn:freeturn.net:3478",
-      username: "free",
-      credential: "free"
-    };
+<script>
+/* ========= Globals and storage keys ========= */
+const CONTACTS_KEY = 'secure_p2p_contacts_v1'; // encrypted contacts blob in localStorage
+let PASSWORD = null;                // stored only in sessionStorage (on success)
+let CONTACTS = [];                  // decrypted array of contacts [{id,name,data...}]
+let CURRENT_PEER = null;            // contact object when chatting
+let pc = null, dc = null;           // RTCPeerConnection & DataChannel
+let videoStream = null;
+let qrParts = [], qrIndex = 0, generatedParts = [];
+let scanParts = [];
 
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', () => {
-      // Check if we already have a password set
-      const savedPassword = localStorage.getItem('multi_qr_chat_password');
-      if (savedPassword) {
-        MASTER_PASSWORD = savedPassword;
-        showContactsScreen();
-      }
-      
-      loadContacts();
-      
-      // Initialize canvas context
-      const canvas = document.getElementById('qrCanvas');
-      canvasContext = canvas.getContext('2d');
+/* ========= Crypto helpers using WebCrypto AES-GCM & PBKDF2 ========= */
+async function deriveKey(pw, saltBytes){
+  // PBKDF2 derive AES-GCM key
+  const enc = new TextEncoder();
+  const pwKey = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt: saltBytes, iterations: 120000, hash:'SHA-256' },
+    pwKey,
+    { name:'AES-GCM', length:256 },
+    false,
+    ['encrypt','decrypt']
+  );
+}
+async function encryptWithPassword(plaintext, pw){
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pw, salt);
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(plaintext));
+  // store salt, iv, ct as base64 JSON
+  return btoa(JSON.stringify({ salt:Array.from(salt), iv:Array.from(iv), ct:Array.from(new Uint8Array(ct)) }));
+}
+async function decryptWithPassword(payloadB64, pw){
+  const obj = JSON.parse(atob(payloadB64));
+  const salt = new Uint8Array(obj.salt);
+  const iv = new Uint8Array(obj.iv);
+  const ct = new Uint8Array(obj.ct);
+  const key = await deriveKey(pw, salt);
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
+  return new TextDecoder().decode(pt);
+}
+
+/* ========= UI helpers ========= */
+function show(id){ document.getElementById('pwScreen').classList.add('hidden'); hideAll(); document.getElementById(id).classList.remove('hidden'); }
+function hideAll(){
+  ['methodScreen','copyScreen','qrGenScreen','qrScanScreen','contactsScreen','chatScreen'].forEach(i=>document.getElementById(i).classList.add('hidden'));
+}
+function alertSafe(msg){ try{ alert(msg); }catch(e){ console.log(msg); } }
+
+/* ========= Password flow ========= */
+document.getElementById('pwBtn').addEventListener('click', async ()=>{
+  const pw = document.getElementById('pwInput').value.trim();
+  if(!pw){ alertSafe('Please enter a password'); return; }
+
+  // if contacts exist, try to decrypt them
+  const stored = localStorage.getItem(CONTACTS_KEY);
+  if(stored){
+    try{
+      const dec = await decryptWithPassword(stored, pw);
+      CONTACTS = JSON.parse(dec) || [];
+      // store password in sessionStorage only
+      sessionStorage.setItem('secure_pw', pw);
+      PASSWORD = pw;
+      showContacts();
+      return;
+    }catch(e){
+      alertSafe('Password incorrect for stored contacts. If you forgot it, contacts cannot be recovered.');
+      return;
+    }
+  }
+
+  // no contacts found -> set session password and go to method selection
+  sessionStorage.setItem('secure_pw', pw);
+  PASSWORD = pw;
+  show('methodScreen');
+});
+
+/* ========= Contacts UI ========= */
+function showContacts(){
+  show('contactsScreen');
+  renderContacts();
+}
+function renderContacts(){
+  const list = document.getElementById('contactsList');
+  list.innerHTML = '';
+  if(!CONTACTS || CONTACTS.length===0){ list.innerHTML = '<div class="center">No contacts saved</div>'; return; }
+  CONTACTS.forEach((c, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'contact-item';
+    div.innerHTML = `<div><strong>${c.name||('Contact '+(idx+1))}</strong><div class="status">${new Date(c.ts).toLocaleString()}</div></div>
+                     <div><button class="small" data-idx="${idx}">Chat</button> <button class="small" data-del="${idx}">Delete</button></div>`;
+    list.appendChild(div);
+  });
+  // attach events
+  list.querySelectorAll('button[data-idx]').forEach(b=>{
+    b.addEventListener('click', async (ev)=>{
+      const idx = +ev.target.dataset.idx;
+      const c = CONTACTS[idx];
+      // start connecting to this saved contact (it contains offer/answer or remote info)
+      await startConnectionFromSaved(c);
+    });
+  });
+  list.querySelectorAll('button[data-del]').forEach(b=>{
+    b.addEventListener('click', async (ev)=>{
+      const idx = +ev.target.dataset.del;
+      if(!confirm('Delete contact?')) return;
+      CONTACTS.splice(idx,1);
+      await persistContacts();
+      renderContacts();
+    });
+  });
+}
+
+/* persist contacts encrypted using PASSWORD */
+async function persistContacts(){
+  if(!PASSWORD) { alertSafe('No password in session'); return; }
+  const json = JSON.stringify(CONTACTS);
+  const blob = await encryptWithPassword(json, PASSWORD);
+  localStorage.setItem(CONTACTS_KEY, blob);
+}
+
+/* ========= Method selection handlers ========= */
+document.getElementById('methodCopy').addEventListener('click', ()=>{ hideAll(); document.getElementById('copyScreen').classList.remove('hidden'); });
+document.getElementById('methodQr').addEventListener('click', ()=>{ hideAll(); document.getElementById('qrGenScreen').classList.remove('hidden'); });
+document.getElementById('goContacts').addEventListener('click', ()=> showContacts());
+
+/* back buttons */
+document.getElementById('copyBackBtn').addEventListener('click', ()=> show('methodScreen'));
+document.getElementById('qrBackBtn').addEventListener('click', ()=> show('methodScreen'));
+document.getElementById('qrScanBack').addEventListener('click', ()=> show('methodScreen'));
+
+/* add new contact button */
+document.getElementById('addNewBtn').addEventListener('click', ()=> show('methodScreen'));
+
+/* logout */
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  sessionStorage.removeItem('secure_pw');
+  PASSWORD = null;
+  // go back to password screen
+  document.getElementById('pwInput').value = '';
+  show('pwScreen');
+});
+
+/* ========= WebRTC & connection helpers ========= */
+
+/* create a local offer and data channel, return base64(offer) */
+async function createLocalOffer(){
+  pc = new RTCPeerConnection();
+  dc = pc.createDataChannel('chat');
+  setupDataChannel(dc);
+  // gather all candidates automatically, but we will strip candidate lines to keep size small
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  // Wait for ICE gathering complete (or small timeout)
+  await waitForIceGathering(pc, 2500);
+  let sdp = pc.localDescription.sdp || offer.sdp || '';
+  // strip candidate lines to reduce QR length (works if relay/tURNS used)
+  sdp = sdp.replace(/a=candidate:.*\r\n/g,'').replace(/.*\.local.*\r\n/g,'');
+  return btoa(JSON.stringify({ type:'offer', sdp }));
+}
+
+/* After receiving remote answer, set it and perform handshake */
+async function finishWithAnswer(answerRaw, contactMeta){
+  try{
+    const obj = JSON.parse(atob(answerRaw));
+    if(!obj || !obj.sdp) throw new Error('Invalid answer format');
+    await pc.setRemoteDescription({ type:'answer', sdp: obj.sdp });
+  }catch(e){
+    throw new Error('Failed to set remote description: ' + e.message);
+  }
+  // handshake check
+  const ok = await performHandshakeCheck();
+  if(!ok) throw new Error('Handshake failed');
+  // persist contact info and go to chat
+  await saveContact(contactMeta);
+  openChat(contactMeta);
+}
+
+/* perform handshake: send ping with nonce, expect same nonce reply within 5s */
+function performHandshakeCheck(){
+  return new Promise((resolve)=>{
+    if(!dc || dc.readyState !== 'open'){ return resolve(false); }
+    const nonce = Math.floor(Math.random()*1e9).toString();
+    let got = false;
+    function onmsg(e){
+      try{
+        const obj = JSON.parse(e.data);
+        if(obj && obj.type==='handshake' && obj.nonce===nonce && obj.reply===true){
+          got=true;
+          dc.removeEventListener('message', onmsg);
+          resolve(true);
+        }
+      }catch(_){}
+    }
+    // listen for incoming handshake and reply accordingly
+    dc.addEventListener('message', function incoming(e){
+      try{
+        const obj = JSON.parse(e.data);
+        if(obj && obj.type==='handshake' && obj.nonce){
+          // reply with same nonce & reply:true
+          dc.send(JSON.stringify({type:'handshake', nonce:obj.nonce, reply:true}));
+        }
+      }catch(_){}
     });
 
-    // Password functions
-    function setPassword() {
-      const pwd = document.getElementById('passwordInput').value;
-      if (!pwd) {
-        alert('Please enter a password');
-        return;
+    dc.addEventListener('message', onmsg);
+    // send handshake
+    dc.send(JSON.stringify({ type:'handshake', nonce, reply:false }));
+    // timeout
+    setTimeout(()=>{ if(!got) { try{ dc.removeEventListener('message', onmsg);}catch(_){} resolve(false);} },5000);
+  });
+}
+
+/* helper: wait for ICE gatheringcomplete or timeout */
+function waitForIceGathering(pcRef, timeoutMs=3000){
+  return new Promise(resolve=>{
+    if(pcRef.iceGatheringState === 'complete') return resolve();
+    const id = setTimeout(()=>{ resolve(); }, timeoutMs);
+    pcRef.addEventListener('icegatheringstatechange', ()=> {
+      if(pcRef.iceGatheringState === 'complete'){ clearTimeout(id); resolve(); }
+    });
+  });
+}
+
+/* Data channel setup to handle messages (text only) */
+function setupDataChannel(channel){
+  channel.onopen = ()=> {
+    console.log('DataChannel open');
+    document.getElementById('connLabel').textContent = 'Open';
+  };
+  channel.onmessage = async (ev) => {
+    try{
+      const payload = JSON.parse(ev.data);
+      // handshake messages handled elsewhere automatically
+      if(payload && payload.type==='chat'){
+        const dec = await decryptWithPassword(payload.msg, PASSWORD);
+        appendChatMessage(dec, false);
       }
-      
-      if (pwd.length < 4) {
-        alert('Password should be at least 4 characters long');
-        return;
-      }
-      
-      MASTER_PASSWORD = pwd;
-      localStorage.setItem('multi_qr_chat_password', pwd);
-      document.getElementById('passwordInput').value = '';
-      showContactsScreen();
+    }catch(e){
+      console.log('msg parse error', e);
     }
+  };
+  channel.onclose = ()=> { document.getElementById('connLabel').textContent='Closed'; };
+}
 
-    // Screen navigation
-    function showContactsScreen() {
-      hideAllScreens();
-      document.getElementById('contactsScreen').classList.add('active');
-      renderContacts();
+/* send chat message encrypted */
+async function sendChatMessage(text){
+  if(!dc || dc.readyState !== 'open') { alertSafe('Channel not open'); return; }
+  const enc = await encryptWithPassword(text, PASSWORD);
+  dc.send(JSON.stringify({ type:'chat', msg: enc }));
+  appendChatMessage(text, true);
+}
+
+/* ========= Copy / Paste flow ========= */
+document.getElementById('genOfferBtn').addEventListener('click', async ()=>{
+  try{
+    const offerB64 = await createLocalOffer();
+    const parts = splitIntoN(offerB64, 4);
+    document.getElementById('offerArea').value = offerB64; // full option for copy
+    // also prepare QR parts for showing if needed
+    generatedParts = parts;
+    // show single-part view in qrGenScreen if user switches
+    alertSafe('Offer generated. Share to peer (copy or QR).');
+  }catch(e){
+    alertSafe('Failed to create offer: '+ e.message);
+  }
+});
+
+/* Accept answer (paste answer into input) */
+document.getElementById('acceptAnswerBtn').addEventListener('click', async ()=>{
+  const answerRaw = document.getElementById('answerIn').value.trim();
+  if(!answerRaw){ alertSafe('Paste peer answer first'); return; }
+  // finish with answer
+  try{
+    // contact meta minimal
+    const meta = { id: Date.now().toString(), name: 'Contact '+(CONTACTS.length+1), ts:Date.now(), remote: answerRaw };
+    await finishWithAnswer(answerRaw, meta);
+    alertSafe('Connection established and contact saved.');
+    showContacts();
+  }catch(e){
+    alertSafe('Failed to finish connection: '+e.message);
+  }
+});
+
+/* ========= QR show / next logic (one-by-one) ========= */
+document.getElementById('qrNextBtn').addEventListener('click', ()=>{
+  if(!generatedParts || generatedParts.length===0) return;
+  qrIndex = (qrIndex + 1) % generatedParts.length;
+  drawGeneratedPart();
+});
+document.getElementById('qrBackBtn').addEventListener('click', ()=> show('methodScreen'));
+function drawGeneratedPart(){
+  const box = document.getElementById('qrGenBox');
+  box.innerHTML = '';
+  const div = document.createElement('div');
+  new QRCode(div, { text: generatedParts[qrIndex], width: 200, height: 200 });
+  box.appendChild(div);
+}
+
+/* generate full offer and split into 4, show first */
+function prepareQrOfferAndShow(){
+  createLocalOffer().then(b64=>{
+    generatedParts = splitIntoN(b64, 4);
+    qrIndex = 0;
+    drawGeneratedPart();
+  }).catch(e=>alertSafe('Failed: '+e.message));
+}
+
+/* ========= QR scanning flow (collect 4 parts in order) ========= */
+document.getElementById('qrScanStart').addEventListener('click', ()=> startQrScan());
+document.getElementById('qrScanStop').addEventListener('click', ()=> stopQrScan());
+let scanAnimationId = null;
+
+async function startQrScan(){
+  scanParts = [];
+  document.getElementById('scannedCount').textContent = '0';
+  const v = document.getElementById('scanVideo');
+  try{
+    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } } });
+    v.srcObject = videoStream;
+    await v.play();
+    document.getElementById('qrScanScreen').classList.remove('hidden');
+    scanLoop();
+  }catch(e){
+    alertSafe('Camera not available: ' + e.message);
+  }
+}
+function stopQrScan(){
+  if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
+  const v = document.getElementById('scanVideo'); v.pause(); v.srcObject = null;
+  if(scanAnimationId) cancelAnimationFrame(scanAnimationId);
+}
+function scanLoop(){
+  const v = document.getElementById('scanVideo');
+  if(!v || v.readyState < 2){ scanAnimationId = requestAnimationFrame(scanLoop); return; }
+  const canvas = document.createElement('canvas');
+  canvas.width = v.videoWidth;
+  canvas.height = v.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+  const img = ctx.getImageData(0,0,canvas.width, canvas.height);
+  const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+  if(code && code.data){
+    // only accept new and keep order
+    if(scanParts.length === 0 || scanParts[scanParts.length-1] !== code.data){
+      scanParts.push(code.data);
+      document.getElementById('scannedCount').textContent = String(scanParts.length);
     }
-
-    function showQrGenerator() {
-      hideAllScreens();
-      document.getElementById('qrGeneratorScreen').classList.add('active');
-      generateMyQrCodes();
+    // when we have 4 parts, stop and assemble
+    if(scanParts.length >= 4){
+      stopQrScan();
+      const assembled = scanParts.join('');
+      processScannedOfferOrAnswer(assembled);
+      return;
     }
+  }
+  scanAnimationId = requestAnimationFrame(scanLoop);
+}
 
-    function showQrScanner() {
-      hideAllScreens();
-      document.getElementById('qrScannerScreen').classList.add('active');
-      resetScannerState();
-      stopScanner();
+/* process assembled offer/answer */
+async function processScannedOfferOrAnswer(b64){
+  // if we don't have an existing pc, then we are the answering peer (we received offer)
+  if(!pc){
+    try{
+      const obj = JSON.parse(atob(b64));
+      if(!obj || !obj.sdp) throw new Error('Invalid offer');
+      // create pc and set remote, then create answer and display as 4 QR codes for peer to scan back
+      pc = new RTCPeerConnection();
+      pc.ondatachannel = (ev)=>{ dc = ev.channel; setupDataChannel(dc); };
+      await pc.setRemoteDescription({ type:'offer', sdp: obj.sdp });
+      const ans = await pc.createAnswer();
+      await pc.setLocalDescription(ans);
+      await waitForIceGathering(pc, 2500);
+      const sdp = (pc.localDescription && pc.localDescription.sdp) || ans.sdp;
+      // remove candidates to keep small
+      const sdpClean = sdp.replace(/a=candidate:.*\r\n/g,'').replace(/.*\\.local.*\\r\\n/g,'');
+      const ansB64 = btoa(JSON.stringify({ type:'answer', sdp: sdpClean }));
+      generatedParts = splitIntoN(ansB64, 4);
+      qrIndex = 0;
+      drawGeneratedPart();
+      alertSafe('Answer generated — show your 4 QR codes to peer so they can scan them back.');
+      // now wait for peer to set remote description (they will, after scanning)
+      // After they set remote, handshake check will run on their side then our side via performHandshakeCheck()
+    }catch(e){
+      alertSafe('Failed processing offer: '+ e.message);
+      pc=null;
     }
-
-    function showChatScreen() {
-      hideAllScreens();
-      document.getElementById('chatScreen').classList.add('active');
+  } else {
+    // we already had a pc & datachannel: this is likely the answer scanned by the original offerer
+    try{
+      const obj = JSON.parse(atob(b64));
+      if(!obj || !obj.sdp) throw new Error('Invalid answer');
+      await pc.setRemoteDescription({ type:'answer', sdp: obj.sdp });
+      // handshake
+      const ok = await performHandshakeCheck();
+      if(!ok) { alertSafe('Handshake failed'); return; }
+      // save contact with minimal meta
+      const meta = { id: Date.now().toString(), name: 'Contact '+(CONTACTS.length+1), ts: Date.now(), remote: b64 };
+      await saveContact(meta);
+      openChat(meta);
+      alertSafe('Connection established and saved.');
+    }catch(e){
+      alertSafe('Failed processing answer: '+ e.message);
     }
+  }
+}
 
-    function hideAllScreens() {
-      document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
+/* ========= Utility: split into N pieces ========= */
+function splitIntoN(str, n){
+  const size = Math.ceil(str.length / n);
+  const out = [];
+  for(let i=0;i<n;i++) out.push(str.slice(i*size, (i+1)*size));
+  return out;
+}
+
+/* ========= Save contact (encrypt data and persist) ========= */
+async function saveContact(meta){
+  // meta should include remote (base64 offer/answer) so we can reconnect later
+  CONTACTS.push(meta);
+  await persistContacts();
+}
+
+/* ========= Start connection to saved contact (reconnect) ========= */
+async function startConnectionFromSaved(contact){
+  // contact.remote contains base64 either offer or answer — we need to determine role
+  PASSWORD = sessionStorage.getItem('secure_pw');
+  if(!PASSWORD){ alertSafe('Session password missing. Please log in again.'); return show('pwScreen'); }
+  try{
+    const obj = JSON.parse(atob(contact.remote));
+    // If it's an offer, we must create answer (we are responder) -> same as processing scanned offer
+    // If it's answer, we are the offerer and must create new local offer? Simpler approach: treat saved remote as an offer; if it's an answer we may still try to setRemote (best effort)
+    if(obj && obj.type === 'offer'){
+      // simulate scanning an offer: call processScannedOfferOrAnswer with the base64 parts as if scanned
+      pc = new RTCPeerConnection();
+      pc.ondatachannel = (ev)=>{ dc = ev.channel; setupDataChannel(dc); };
+      await pc.setRemoteDescription({ type:'offer', sdp: obj.sdp });
+      const ans = await pc.createAnswer();
+      await pc.setLocalDescription(ans);
+      await waitForIceGathering(pc, 2500);
+      const sdpClean = (pc.localDescription.sdp || ans.sdp).replace(/a=candidate:.*\r\n/g,'');
+      const ansB64 = btoa(JSON.stringify({ type:'answer', sdp: sdpClean }));
+      // show answer as 4 QR pieces for remote to scan (but since this is reconnecting we may instead expect they are online)
+      generatedParts = splitIntoN(ansB64, 4);
+      qrIndex = 0;
+      drawGeneratedPart();
+      show('qrGenScreen');
+      alertSafe('Answer generated for this saved contact — have peer scan the QR codes.');
+    } else if(obj && obj.type === 'answer'){
+      // If we saved an answer (unusual), create a new offer instead
+      const offerB64 = await createLocalOffer();
+      generatedParts = splitIntoN(offerB64, 4);
+      qrIndex = 0;
+      drawGeneratedPart();
+      show('qrGenScreen');
+      alertSafe('Offer generated — show these to your peer.');
+    } else {
+      alertSafe('Saved contact data not understood.');
+    }
+  }catch(e){
+    alertSafe('Failed to use saved contact: '+ e.message);
+  }
+}
+
+/* ========= Chat UI and lifecycle ========= */
+function openChat(meta){
+  CURRENT_PEER = meta;
+  show('chatScreen');
+  document.getElementById('chatTitle').textContent = meta.name || 'Chat';
+  document.getElementById('connLabel').textContent = 'Testing...';
+  // load chat history from sessionStorage if any
+  const histKey = 'chat_'+meta.id;
+  const histRaw = sessionStorage.getItem(histKey);
+  const history = histRaw ? JSON.parse(histRaw) : [];
+  const container = document.getElementById('chatHistory');
+  container.innerHTML = '';
+  history.forEach(it => {
+    const d = document.createElement('div'); d.textContent = (it.me ? 'Me: ' : 'Peer: ') + it.msg; container.appendChild(d);
+  });
+  // set send button
+  document.getElementById('chatSend').onclick = async ()=>{
+    const text = document.getElementById('chatInput').value.trim();
+    if(!text) return;
+    await sendChatMessage(text);
+    saveChatMessage(meta.id, text, true);
+    document.getElementById('chatInput').value = '';
+  };
+  document.getElementById('chatClose').onclick = ()=>{ // close pc & dc and go back
+    try{ if(pc) pc.close(); }catch(_){} pc=null; dc=null; showContacts(); };
+}
+
+/* append chat message to UI and sessionStorage */
+function appendChatMessage(text, me){
+  const container = document.getElementById('chatHistory');
+  const d = document.createElement('div'); d.textContent = (me ? 'Me: ' : 'Peer: ') + text; container.appendChild(d); container.scrollTop = container.scrollHeight;
+  if(CURRENT_PEER){
+    saveChatMessage(CURRENT_PEER.id, text, me);
+  }
+}
+
+/* save chat history in sessionStorage (cleared on tab close) */
+function saveChatMessage(contactId, text, me){
+  const key = 'chat_' + contactId;
+  const arr = sessionStorage.getItem(key) ? JSON.parse(sessionStorage.getItem(key)) : [];
+  arr.push({ ts: Date.now(), msg: text, me: !!me });
+  sessionStorage.setItem(key, JSON.stringify(arr));
+}
+
+/* ========= utility to set up initial QR generate/scan flows ========= */
+document.getElementById('methodQr').addEventListener('click', ()=>{
+  // prepare a local offer when user chooses QR mode
+  prepareQrOfferAndShow();
+  show('qrGenScreen');
+});
+
+/* show QR scanning screen when user needs to scan (for example second peer) */
+/* Add a simple button to go to scanner by reusing method screen's choices */
+document.getElementById('qrGenBox').addEventListener('click', ()=>{}); // noop
+
+/* Provide a simple path to scanning for the peer: open qrScanScreen manually from method selection */
+document.getElementById('methodQr').addEventListener('click', ()=>{/* prepared above */});
+document.getElementById('qrScanBack').addEventListener('click', ()=> show('methodScreen'));
+
+/* For the copy/paste page, user can switch to QR generation result if they want */
+document.getElementById('offerArea').addEventListener('click', ()=>{ /* allow selection */ });
+
+/* Start scanning from method screen: provide a scan button on method selection by adding handler:
+   we will start scanning when the user chooses copy method and clicks "Scan" via the video flow or via explicit QR scan path */
+document.getElementById('methodCopy').addEventListener('click', ()=>{/* copy screen shown already */});
+
+/* ========= helper: start app state when loaded ========= */
+(function init(){
+  // if session password present, load contacts and go to contacts view
+  const spw = sessionStorage.getItem('secure_pw');
+  if(spw){
+    PASSWORD = spw;
+    // try load contacts
+    const stored = localStorage.getItem(CONTACTS_KEY);
+    if(stored){
+      decryptWithPassword(stored, spw).then(json=>{
+        CONTACTS = JSON.parse(json)||[];
+        showContacts();
+      }).catch(err=>{
+        // invalid session pw: clear
+        sessionStorage.removeItem('secure_pw');
+        PASSWORD = null;
+        show('pwScreen');
       });
+    } else {
+      show('methodScreen');
     }
+  } else {
+    show('pwScreen');
+  }
+})();
 
-    // Multi-QR Code Generation
-    function generateMyQrCodes() {
-      try {
-        const keyPair = nacl.box.keyPair();
-        window.MY_KEYPAIR = keyPair;
-        
-        const pc = new RTCPeerConnection({ iceServers: [TURN_SERVER] });
-        pc.createDataChannel('multi-qr-chat');
-        
-        pc.onicecandidate = (e) => {
-          if (e.candidate) return;
-          
-          let offer = pc.localDescription.sdp;
-          // Remove local candidates to reduce QR size
-          offer = offer.replace(/a=candidate:.*\r\n/g, '');
-          offer = offer.replace(/.*\.local.*\r\n/g, '');
-          
-          const fullData = JSON.stringify({
-            type: 'offer',
-            sdp: offer,
-            publicKey: nacl.util.encodeBase64(keyPair.publicKey),
-            timestamp: Date.now()
-          });
-          
-          // Split data into parts
-          qrDataParts = splitDataIntoParts(fullData, totalQrParts);
-          
-          // Generate QR codes for each part
-          for (let i = 0; i < totalQrParts; i++) {
-            const qrData = JSON.stringify({
-              part: i + 1,
-              total: totalQrParts,
-              data: qrDataParts[i],
-              checksum: simpleChecksum(qrDataParts[i])
-            });
-            
-            const qrElement = document.getElementById(`myQr${i+1}`);
-            qrElement.innerHTML = '';
-            new QRCode(qrElement, {
-              text: qrData,
-              width: qrSize,
-              height: qrSize,
-              colorDark: "#000000",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.Q
-            });
-          }
-          
-          pc.close();
-        };
-        
-        pc.createOffer().then(offer => pc.setLocalDescription(offer));
-      } catch (e) {
-        console.error('Error generating QR codes:', e);
-        alert('Failed to generate QR codes. Please try again.');
-      }
-    }
+/* ========= clean up on close ========= */
+window.addEventListener('beforeunload', ()=>{
+  // remove password from session (sessionStorage clears on tab close but be explicit)
+  sessionStorage.removeItem('secure_pw');
+  // clear chat histories
+  if(CURRENT_PEER) sessionStorage.removeItem('chat_' + CURRENT_PEER.id);
+  // stop camera
+  if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
+  try{ if(pc) pc.close(); }catch(_){}
+});
 
-    function splitDataIntoParts(data, parts) {
-      const partLength = Math.ceil(data.length / parts);
-      const result = [];
-      
-      for (let i = 0; i < parts; i++) {
-        const start = i * partLength;
-        const end = Math.min(start + partLength, data.length);
-        result.push(data.substring(start, end));
-      }
-      
-      return result;
-    }
+/* ========= small helper to prepare offer (used when clicking method-copy -> start offer) ========= */
+/* Also allow user to start scanning answer via camera: implement a simple scanAnswer button on copyScreen -> reuse scan flow */
+document.getElementById('copyScreen').addEventListener('click', (e)=>{
+  // placeholder to keep copy screen active
+});
 
-    function simpleChecksum(str) {
-      let checksum = 0;
-      for (let i = 0; i < str.length; i++) {
-        checksum = (checksum + str.charCodeAt(i)) % 1000;
-      }
-      return checksum;
-    }
+/* Provide a button to go to QR scanner when in method screen - attach on method selection simple flow */
+document.getElementById('methodScreen').addEventListener('click', (e)=>{
+  // nothing
+});
 
-    function nextQrPart() {
-      if (currentQrPart < totalQrParts) {
-        // Hide current part
-        document.getElementById(`qrPart${currentQrPart}`).classList.remove('active');
-        document.getElementById(`progress${currentQrPart}`).classList.remove('active');
-        
-        // Show next part
-        currentQrPart++;
-        document.getElementById(`qrPart${currentQrPart}`).classList.add('active');
-        document.getElementById(`progress${currentQrPart}`).classList.add('active');
-        
-        // Update title
-        document.getElementById('qrPartTitle').textContent = `Part ${currentQrPart} of ${totalQrParts}`;
-        
-        // Show previous button if not on first part
-        if (currentQrPart > 1) {
-          document.getElementById('prevBtn').style.display = 'block';
-        }
-        
-        // Change next button text if on last part
-        if (currentQrPart === totalQrParts) {
-          document.getElementById('nextBtn').textContent = 'Finish';
-        }
-      } else {
-        showContactsScreen();
-      }
-    }
+/* Provide 'Scan' operations from copy screen: when user pasted answer they click Accept - handled above. To scan answer using camera, we'll implement a quick helper: */
+async function scanForAnswerAndFinish(){
+  // opens camera and collects 4 parts in order (same as scanLoop but synchronous one-time)
+  scanParts = [];
+  await startQrScan();
+  // processScannedOfferOrAnswer will handle assembled pieces
+}
 
-    function previousQrPart() {
-      if (currentQrPart > 1) {
-        // Hide current part
-        document.getElementById(`qrPart${currentQrPart}`).classList.remove('active');
-        document.getElementById(`progress${currentQrPart}`).classList.remove('active');
-        
-        // Show previous part
-        currentQrPart--;
-        document.getElementById(`qrPart${currentQrPart}`).classList.add('active');
-        document.getElementById(`progress${currentQrPart}`).classList.add('active');
-        
-        // Update title
-        document.getElementById('qrPartTitle').textContent = `Part ${currentQrPart} of ${totalQrParts}`;
-        
-        // Hide previous button if on first part
-        if (currentQrPart === 1) {
-          document.getElementById('prevBtn').style.display = 'none';
-        }
-        
-        // Change next button text if not on last part
-        if (currentQrPart < totalQrParts) {
-          document.getElementById('nextBtn').textContent = 'Next QR';
-        }
-      }
-    }
+/* Expose for console/debug */
+window._debug = { CONTACTS, PASSWORD };
 
-    // QR Scanner functions
-    function resetScannerState() {
-      scannedParts = {};
-      updateScanProgress(1);
-      updateScannerStatus('Ready to scan part 1 of 3', '');
-    }
-
-    function updateScanProgress(currentPart) {
-      for (let i = 1; i <= totalQrParts; i++) {
-        const dot = document.getElementById(`scanProgress${i}`);
-        dot.classList.remove('active', 'completed');
-        
-        if (i < currentPart) {
-          dot.classList.add('completed');
-        } else if (i === currentPart) {
-          dot.classList.add('active');
-        }
-      }
-    }
-
-    async function startScanner() {
-      const startBtn = document.getElementById('startScannerBtn');
-      const flipBtn = document.getElementById('flipCameraBtn');
-      const qrVideo = document.getElementById('qrVideo');
-      
-      // Update UI
-      startBtn.textContent = 'Starting...';
-      startBtn.disabled = true;
-      updateScannerStatus('Initializing camera...', 'scanning');
-      
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: currentFacingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
-        });
-        
-        // Use the existing video element
-        video = qrVideo;
-        video.srcObject = stream;
-        
-        // Wait for video to be ready
-        video.addEventListener('loadedmetadata', () => {
-          // Set canvas size to match video's natural dimensions
-          const canvas = document.getElementById('qrCanvas');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          
-          // Update UI
-          startBtn.style.display = 'none';
-          flipBtn.style.display = 'inline-block';
-          updateScannerStatus('Scanning for QR codes...', 'scanning');
-          
-          // Start scanning loop
-          scanActive = true;
-          scanInterval = setInterval(scanFrame, 100);
-        });
-        
-      } catch (err) {
-        console.error('Camera error:', err);
-        updateScannerStatus('Camera access denied. Please allow camera permission.', 'error');
-        startBtn.textContent = 'Try Again';
-        startBtn.disabled = false;
-      }
-    }
-
-    function stopScanner() {
-      scanActive = false;
-      if (scanInterval) {
-        clearInterval(scanInterval);
-        scanInterval = null;
-      }
-      
-      if (video && video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-      }
-      
-      const startBtn = document.getElementById('startScannerBtn');
-      const flipBtn = document.getElementById('flipCameraBtn');
-      
-      startBtn.style.display = 'inline-block';
-      startBtn.textContent = 'Start Scanner';
-      startBtn.disabled = false;
-      flipBtn.style.display = 'none';
-    }
-
-    function flipCamera() {
-      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-      stopScanner();
-      startScanner();
-    }
-
-    function scanFrame() {
-      if (!scanActive || !video || video.readyState < 2) return;
-      
-      try {
-        // Draw video frame to canvas
-        canvasContext.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        
-        // Get image data from canvas
-        const imageData = canvasContext.getImageData(0, 0, video.videoWidth, video.videoHeight);
-        
-        // Try to decode QR code
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
-        });
-        
-        if (code) {
-          try {
-            const data = JSON.parse(code.data.trim());
-            
-            // Validate QR code structure
-            if (data.part && data.total && data.data && data.checksum) {
-              // Verify checksum
-              if (data.checksum !== simpleChecksum(data.data)) {
-                updateScannerStatus('Invalid QR code checksum', 'error');
-                return;
-              }
-              
-              // Store the scanned part
-              scannedParts[data.part] = data.data;
-              
-              // Update UI
-              updateScannerStatus(`Part ${data.part} of ${data.total} scanned successfully!`, 'success');
-              updateScanProgress(data.part + 1);
-              
-              // Check if we have all parts
-              if (Object.keys(scannedParts).length === data.total) {
-                // Combine all parts
-                const combinedData = combineDataParts(scannedParts, data.total);
-                
-                // Process the complete data
-                setTimeout(() => {
-                  processScannedQR(JSON.parse(combinedData));
-                }, 1000);
-              } else {
-                // Update status for next part
-                setTimeout(() => {
-                  updateScannerStatus(`Ready to scan part ${Object.keys(scannedParts).length + 1} of ${data.total}`, 'partial');
-                }, 1500);
-              }
-              
-              return;
-            } else {
-              updateScannerStatus('Invalid QR code format', 'error');
-            }
-          } catch (e) {
-            console.error("QR parse error:", e);
-            updateScannerStatus('Invalid QR code data', 'error');
-          }
-        }
-      } catch (e) {
-        console.error("Scanning error:", e);
-      }
-    }
-
-    function combineDataParts(parts, totalParts) {
-      let combined = '';
-      for (let i = 1; i <= totalParts; i++) {
-        if (parts[i]) {
-          combined += parts[i];
-        } else {
-          throw new Error(`Missing part ${i}`);
-        }
-      }
-      return combined;
-    }
-
-    function processScannedQR(data) {
-      // Stop scanner
-      stopScanner();
-      
-      // Add a small delay for UX
-      setTimeout(() => {
-        saveContact(data);
-        showContactsScreen();
-        alert('Contact added successfully!');
-      }, 500);
-    }
-
-    function updateScannerStatus(message, type) {
-      const statusEl = document.getElementById('scannerStatus');
-      statusEl.textContent = message;
-      statusEl.className = 'scanner-status';
-      
-      if (type) {
-        statusEl.classList.add(type);
-      }
-    }
-
-    // Contact management (remaining functions same as before)
-    function saveContact(offerData) {
-      if (!MASTER_PASSWORD) return;
-      
-      try {
-        const encrypted = encryptData(JSON.stringify(offerData), MASTER_PASSWORD);
-        const contact = {
-          id: Date.now().toString(),
-          name: 'Contact ' + (CONTACTS.length + 1),
-          data: encrypted,
-          timestamp: new Date().toISOString()
-        };
-        
-        CONTACTS.push(contact);
-        saveContactsToStorage();
-      } catch (e) {
-        console.error('Error saving contact:', e);
-        alert('Failed to save contact. Please try again.');
-      }
-    }
-
-    function saveContactsToStorage() {
-      if (!MASTER_PASSWORD) return;
-      try {
-        const encrypted = encryptData(JSON.stringify(CONTACTS), MASTER_PASSWORD);
-        localStorage.setItem('multi_qr_chat_contacts', encrypted);
-      } catch (e) {
-        console.error('Error saving contacts:', e);
-      }
-    }
-
-    function loadContacts() {
-      const encrypted = localStorage.getItem('multi_qr_chat_contacts');
-      if (!encrypted || !MASTER_PASSWORD) return;
-      
-      try {
-        const decrypted = decryptData(encrypted, MASTER_PASSWORD);
-        CONTACTS = JSON.parse(decrypted);
-        renderContacts();
-      } catch (e) {
-        console.error('Decrypt failed', e);
-        CONTACTS = [];
-      }
-    }
-
-    function renderContacts() {
-      const list = document.getElementById('contactsList');
-      const noContacts = document.getElementById('noContacts');
-      
-      if (CONTACTS.length === 0) {
-        noContacts.style.display = 'block';
-        list.innerHTML = '';
-      } else {
-        noContacts.style.display = 'none';
-        list.innerHTML = CONTACTS.map(contact => `
-          <div class="contact-item">
-            <div class="contact-info">
-              <div class="contact-name">${contact.name}</div>
-              <div class="contact-time">${new Date(contact.timestamp).toLocaleString()}</div>
-            </div>
-            <div class="contact-actions">
-              <button class="btn-small" onclick="startChat('${contact.id}')">Chat</button>
-              <button class="btn-small btn-danger" onclick="deleteContact('${contact.id}')">Delete</button>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    function deleteContact(id) {
-      if (confirm('Delete this contact?')) {
-        CONTACTS = CONTACTS.filter(c => c.id !== id);
-        saveContactsToStorage();
-        renderContacts();
-      }
-    }
-
-    // Chat functions (remaining functions same as before)
-    async function startChat(contactId) {
-      const contact = CONTACTS.find(c => c.id === contactId);
-      if (!contact) return;
-      
-      CURRENT_CONTACT = contact;
-      document.getElementById('chatTitle').textContent = contact.name;
-      document.getElementById('chatArea').innerHTML = '<div class="empty-state"><p>Connecting...</p></div>';
-      showChatScreen();
-      
-      try {
-        const decrypted = decryptData(contact.data, MASTER_PASSWORD);
-        const offerData = JSON.parse(decrypted);
-        await connectToPeer(offerData);
-      } catch (e) {
-        console.error('Failed to decrypt contact data:', e);
-        alert('Failed to connect to contact');
-        closeChat();
-      }
-    }
-
-    async function connectToPeer(offerData) {
-      const keyPair = nacl.box.keyPair();
-      window.MY_KEYPAIR = keyPair;
-      
-      PEER_CONNECTION = new RTCPeerConnection({ 
-        iceServers: [TURN_SERVER],
-        iceTransportPolicy: "relay"
-      });
-      
-      PEER_CONNECTION.ondatachannel = (e) => {
-        DATA_CHANNEL = e.channel;
-        setupDataChannel();
-      };
-      
-      const offer = new RTCSessionDescription({
-        type: 'offer',
-        sdp: offerData.sdp
-      });
-      
-      await PEER_CONNECTION.setRemoteDescription(offer);
-      
-      const answer = await PEER_CONNECTION.createAnswer();
-      await PEER_CONNECTION.setLocalDescription(answer);
-      
-      updateStatus('Connecting...', 'connecting');
-    }
-    
-    function setupDataChannel() {
-      DATA_CHANNEL.onopen = () => {
-        updateStatus('Online', 'online');
-        document.getElementById('messageInput').disabled = false;
-        document.getElementById('messageInput').focus();
-        document.querySelector('#chatScreen button').disabled = false;
-        document.getElementById('chatArea').innerHTML = '';
-        addMessage('system', 'Connected! You can now chat securely.');
-      };
-      
-      DATA_CHANNEL.onmessage = (e) => {
-        addMessage('peer', e.data);
-      };
-      
-      DATA_CHANNEL.onclose = () => {
-        updateStatus('Offline', 'offline');
-        addMessage('system', 'Connection lost.');
-      };
-    }
-    
-    function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const msg = input.value.trim();
-      if (!msg || !DATA_CHANNEL) return;
-      
-      input.value = '';
-      addMessage('you', msg);
-      if (DATA_CHANNEL && DATA_CHANNEL.readyState === 'open') {
-        DATA_CHANNEL.send(msg);
-      }
-    }
-    
-    function addMessage(sender, text) {
-      const chatArea = document.getElementById('chatArea');
-      
-      // Remove empty state if it exists
-      if (chatArea.querySelector('.empty-state')) {
-        chatArea.innerHTML = '';
-      }
-      
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${sender}`;
-      
-      const messageText = document.createElement('div');
-      messageText.textContent = text;
-      messageDiv.appendChild(messageText);
-      
-      const messageTime = document.createElement('div');
-      messageTime.className = 'message-time';
-      messageTime.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      messageDiv.appendChild(messageTime);
-      
-      chatArea.appendChild(messageDiv);
-      chatArea.scrollTop = chatArea.scrollHeight;
-    }
-    
-    function updateStatus(text, className) {
-      const status = document.getElementById('chatStatus');
-      status.textContent = text;
-      status.className = `status ${className}`;
-    }
-    
-    function closeChat() {
-      if (PEER_CONNECTION) {
-        PEER_CONNECTION.close();
-        PEER_CONNECTION = null;
-      }
-      DATA_CHANNEL = null;
-      CURRENT_CONTACT = null;
-      showContactsScreen();
-    }
-
-    // Encryption utilities
-    function deriveKey(password, salt) {
-      const encoder = new TextEncoder();
-      const passBytes = encoder.encode(password);
-      const combined = new Uint8Array(passBytes.length + salt.length);
-      combined.set(passBytes);
-      combined.set(salt, passBytes.length);
-      return nacl.hash(combined).slice(0, 32);
-    }
-
-    function encryptData(data, password) {
-      const encoder = new TextEncoder();
-      const plaintext = encoder.encode(data);
-      const salt = nacl.randomBytes(32);
-      const key = deriveKey(password, salt);
-      const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-      const encrypted = nacl.secretbox(plaintext, nonce, key);
-      
-      const combined = new Uint8Array(salt.length + nonce.length + encrypted.length);
-      combined.set(salt);
-      combined.set(nonce, salt.length);
-      combined.set(encrypted, salt.length + nonce.length);
-      
-      return nacl.util.encodeBase64(combined);
-    }
-
-    function decryptData(encryptedData, password) {
-      const combined = nacl.util.decodeBase64(encryptedData);
-      const salt = combined.slice(0, 32);
-      const nonce = combined.slice(32, 32 + nacl.secretbox.nonceLength);
-      const ciphertext = combined.slice(32 + nacl.secretbox.nonceLength);
-      
-      const key = deriveKey(password, salt);
-      const decrypted = nacl.secretbox.open(ciphertext, nonce, key);
-      
-      if (!decrypted) throw new Error('Decryption failed');
-      return new TextDecoder().decode(decrypted);
-    }
-  </script>
+</script>
 </body>
 </html>
