@@ -4,22 +4,95 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Secret Chat</title>
-  <!-- FIXED: Removed trailing spaces in URLs -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: #f5f7fa; color: #333; padding: 16px; max-width: 500px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; }
-    .screen { display: none; flex: 1; flex-direction: column; }
-    .active { display: flex !important; }
-    h1 { text-align: center; margin: 16px 0; color: #2c3e50; font-size: 24px; }
-    input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-    button { background: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; }
-    button:hover { background: #2980b9; }
-    .btn-secondary { background: #95a5a6; }
-    .btn-danger { background: #e74c3c; }
+    /* Reset & Base Styles */
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    }
+    
+    body { 
+      background: #f5f7fa; 
+      color: #333; 
+      padding: 16px; 
+      max-width: 500px; 
+      margin: 0 auto; 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    /* Screen Management */
+    .screen { 
+      display: none; 
+      flex: 1; 
+      flex-direction: column; 
+    }
+    
+    .active { 
+      display: flex !important; 
+    }
+    
+    /* Typography */
+    h1 { 
+      text-align: center; 
+      margin: 16px 0; 
+      color: #2c3e50; 
+      font-size: 24px; 
+    }
+    
+    /* Form Elements */
+    input, button { 
+      width: 100%; 
+      padding: 12px; 
+      margin: 8px 0; 
+      border: 1px solid #ddd; 
+      border-radius: 8px; 
+      font-size: 16px; 
+    }
+    
+    button { 
+      background: #3498db; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold; 
+      transition: background 0.2s;
+    }
+    
+    button:hover { 
+      background: #2980b9; 
+    }
+    
+    .btn-secondary { 
+      background: #95a5a6; 
+    }
+    
+    .btn-secondary:hover { 
+      background: #7f8c8d; 
+    }
+    
+    .btn-danger { 
+      background: #e74c3c; 
+    }
+    
+    .btn-danger:hover { 
+      background: #c0392b; 
+    }
+    
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 14px;
+      width: auto;
+    }
+    
+    /* Contact List */
     .contact-item { 
       background: white; 
       padding: 12px; 
@@ -30,19 +103,29 @@
       align-items: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    
     .status { 
       font-size: 12px; 
       padding: 4px 8px; 
       border-radius: 12px; 
       color: white;
     }
-    .online { background: #2ecc71; }
-    .offline { background: #95a5a6; }
+    
+    .online { 
+      background: #2ecc71; 
+    }
+    
+    .offline { 
+      background: #95a5a6; 
+    }
+    
     .actions button { 
       padding: 4px 8px; 
       font-size: 12px; 
       margin-left: 4px;
     }
+    
+    /* Chat Area */
     #chatArea { 
       flex: 1; 
       background: white; 
@@ -52,15 +135,43 @@
       overflow-y: auto; 
       display: none;
     }
+    
     .message { 
       padding: 8px 0; 
       word-wrap: break-word; 
     }
-    .you { color: #3498db; }
-    .peer { color: #2ecc71; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .header-buttons { display: flex; gap: 8px; }
-    .back-btn { background: none; border: none; font-size: 18px; color: #3498db; }
+    
+    .you { 
+      color: #3498db; 
+    }
+    
+    .peer { 
+      color: #2ecc71; 
+    }
+    
+    /* Header */
+    .header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 12px; 
+    }
+    
+    .header-buttons { 
+      display: flex; 
+      gap: 8px; 
+    }
+    
+    .back-btn { 
+      background: none; 
+      border: none; 
+      font-size: 18px; 
+      color: #3498db; 
+      width: auto;
+      padding: 8px;
+    }
+    
+    /* Instructions */
     .instructions { 
       text-align: center; 
       font-size: 13px; 
@@ -68,27 +179,31 @@
       margin: 12px 0; 
       line-height: 1.4;
     }
+    
+    /* QR Scanner */
     #qrReader {
       position: relative;
       width: 100%;
-      height: 300px;
+      height: 350px; /* Increased height */
       background: #000;
       margin: 10px 0;
       border-radius: 8px;
       overflow: hidden;
     }
+    
     #qrGuide {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 200px;
-      height: 200px;
-      border: 2px solid #2ecc71;
+      width: 250px; /* Increased size */
+      height: 250px; /* Increased size */
+      border: 3px solid #2ecc71; /* Thicker border */
       border-radius: 12px;
       pointer-events: none;
       box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
     }
+    
     #qrGuide::before {
       content: "↑ Place QR here ↑";
       position: absolute;
@@ -96,15 +211,37 @@
       left: 50%;
       transform: translateX(-50%);
       color: white;
-      font-size: 14px;
+      font-size: 16px; /* Larger text */
       font-weight: bold;
+    }
+    
+    /* QR Generator */
+    .qr-container {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    #myQr {
+      margin: 0 auto;
+      max-width: 300px; /* Larger QR code */
+    }
+    
+    .copy-btn-container {
+      margin-top: 15px;
+    }
+    
+    /* No Contacts */
+    #noContacts { 
+      text-align: center; 
+      padding: 20px; 
+      color: #7f8c8d; 
     }
   </style>
 </head>
 <body>
   <!-- Password Screen -->
   <div id="passwordScreen" class="screen active">
-    <h1>🔒 Secret Chat v552</h1>
+    <h1>🔒 Secret Chat v559</h1>
     <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
     <button onclick="setPassword()">Enter</button>
     <p style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 14px;">
@@ -117,8 +254,8 @@
     <div class="header">
       <h1>Secret Chat</h1>
       <div class="header-buttons">
-        <button class="btn-secondary" onclick="showQrGenerator()" title="Generate your QR">➕</button>
-        <button class="btn-secondary" onclick="showQrScanner()" title="Scan friend's QR">📱</button>
+        <button class="btn-secondary" onclick="showQrGenerator()" title="Generate your QR">➕ Generate</button>
+        <button class="btn-secondary" onclick="showQrScanner()" title="Scan friend's QR">📱 Scan</button>
       </div>
     </div>
     
@@ -145,7 +282,12 @@
       <button class="back-btn" onclick="showMainScreen()">&larr;</button>
       <h1>My QR Code</h1>
     </div>
-    <div id="myQr" style="text-align: center; padding: 20px;"></div>
+    <div class="qr-container">
+      <div id="myQr"></div>
+      <div class="copy-btn-container">
+        <button class="btn-secondary btn-small" onclick="copyQrData()">Copy QR Data</button>
+      </div>
+    </div>
     <p style="text-align: center; margin: 10px 0; color: #7f8c8d;">
       Share this QR with your friend
     </p>
@@ -188,6 +330,7 @@
     let CONTACTS = [];
     let video = null;
     let scanActive = false;
+    let currentQrData = null;
     
     // TURN server
     const TURN_SERVER = {
@@ -227,6 +370,22 @@
       document.getElementById('qrScannerScreen').classList.add('active');
     }
 
+    function copyQrData() {
+      if (!currentQrData) {
+        alert('No QR data available');
+        return;
+      }
+      
+      navigator.clipboard.writeText(currentQrData)
+        .then(() => {
+          alert('QR data copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+          alert('Failed to copy QR data');
+        });
+    }
+
     // OPTIMIZED: Remove unnecessary ICE candidates for smaller QR
     function generateMyQr() {
       try {
@@ -250,8 +409,13 @@
             publicKey: nacl.util.encodeBase64(keyPair.publicKey)
           });
           
+          currentQrData = qrData;
           document.getElementById('myQr').innerHTML = '';
-          new QRCode(document.getElementById('myQr'), qrData);
+          new QRCode(document.getElementById('myQr'), {
+            text: qrData,
+            width: 256,
+            height: 256
+          });
           pc.close();
         };
         
@@ -329,7 +493,6 @@
       }
     }
 
-    // ... (rest of your encryption/contact functions remain unchanged)
     function deriveKey(password, salt) {
       const encoder = new TextEncoder();
       const passBytes = encoder.encode(password);
@@ -376,7 +539,7 @@
         const contact = {
           id: Date.now().toString(),
           name: 'Contact ' + (CONTACTS.length + 1),
-           encrypted,
+          data: encrypted, // Fixed: changed from 'encrypted' to 'data'
           timestamp: new Date().toISOString()
         };
         
@@ -461,6 +624,7 @@
         const offerData = JSON.parse(decrypted);
         connectToPeer(offerData);
       } catch (e) {
+        console.error('Failed to decrypt contact data:', e);
         alert('Failed to decrypt contact data');
         closeChat();
       }
@@ -480,7 +644,11 @@
         setupDataChannel();
       };
       
-      const offer = new RTCSessionDescription(offerData);
+      const offer = new RTCSessionDescription({
+        type: 'offer',
+        sdp: offerData.sdp
+      });
+      
       await PEER_CONNECTION.setRemoteDescription(offer);
       
       const answer = await PEER_CONNECTION.createAnswer();
@@ -498,7 +666,7 @@
       };
       
       DATA_CHANNEL.onmessage = (e) => {
-        addMessage('peer', 'Message received');
+        addMessage('peer', e.data);
       };
       
       DATA_CHANNEL.onclose = () => {
