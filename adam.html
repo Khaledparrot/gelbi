@@ -1,0 +1,314 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Directory Demo (Fictional Data Only)</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#f4f6f8;color:#111}
+  .wrap{max-width:1000px;margin:24px auto;padding:18px;background:white;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  h1{margin:0 0 12px;font-size:20px}
+  .center{text-align:center}
+  .row{display:flex;gap:8px;align-items:center}
+  input[type="text"], input[type="password"]{flex:1;padding:8px;border:1px solid #ccd; border-radius:6px}
+  button{padding:8px 12px;border-radius:6px;border:0;background:#1976d2;color:white;cursor:pointer}
+  button.secondary{background:#6c757d}
+  .controls{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  .list{margin-top:12px;border-top:1px solid #eef;padding-top:12px}
+  .item{display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px dashed #eee}
+  .thumb{width:56px;height:56px;border-radius:6px;object-fit:cover;background:#ddd}
+  .meta{flex:1}
+  .meta h3{margin:0;font-size:16px}
+  .meta p{margin:4px 0 0;color:#666;font-size:13px}
+  .right{width:120px;text-align:right}
+  .pager{display:flex;gap:8px;justify-content:center;margin:12px 0}
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:20px}
+  .card{background:white;padding:16px;border-radius:10px;max-width:720px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+  .images{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .images img{width:120px;height:80px;object-fit:cover;border-radius:6px}
+  .small{font-size:13px;color:#555}
+  .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef;color:#123;font-size:12px;margin-right:4px}
+  .note{font-size:13px;color:#b00}
+  .footer{font-size:13px;color:#666;margin-top:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Secure Directory — Demo (Fictional data only)</h1>
+
+    <!-- Password screen -->
+    <div id="passwordScreen">
+      <p>This demo requires a password to view the directory (demo only).</p>
+      <div class="row">
+        <input id="passwordInput" type="password" placeholder="Enter password (demo: demo-pass)" />
+        <button id="pwBtn">Unlock</button>
+      </div>
+      <p class="small">Password is stored only in session (cleared when you close the tab).</p>
+    </div>
+
+    <!-- Directory UI -->
+    <div id="directoryUI" style="display:none">
+      <div class="controls">
+        <input id="searchInput" type="text" placeholder="Search name..." />
+        <button id="searchBtn">Search</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+        <div style="margin-left:auto" class="small">Total entries: <strong id="totalCount">0</strong></div>
+      </div>
+
+      <div class="row">
+        <div style="flex:1">
+          <div id="list" class="list"></div>
+          <div class="pager">
+            <button id="prevBtn" class="secondary">Prev</button>
+            <div id="pageInfo" class="small"></div>
+            <button id="nextBtn" class="secondary">Next</button>
+          </div>
+        </div>
+        <div style="width:260px;padding-left:12px;border-left:1px solid #f0f3f6">
+          <h3 class="small">Filters</h3>
+          <div style="margin-top:8px">
+            <label class="small">Max incident count:
+              <input id="maxInc" type="text" placeholder="e.g., 10" style="width:100%;margin-top:6px" />
+            </label>
+            <div style="margin-top:8px">
+              <button id="applyFilter" class="small">Apply</button>
+            </div>
+          </div>
+          <div style="margin-top:18px">
+            <p class="note">This is fictional demo data. Do not use real personal data without consent or lawful basis.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Demo generated in browser. You can host this page privately (OnionShare) — but never publish real personal data without consent and legal review.
+      </div>
+    </div>
+
+    <!-- Modal profile -->
+    <div id="profileModal" style="display:none" class="modal">
+      <div class="card">
+        <div style="display:flex;gap:12px;align-items:center">
+          <img id="modalThumb" class="thumb" src="" alt="pic" />
+          <div style="flex:1">
+            <h3 id="modalName"></h3>
+            <div class="small" id="modalMeta"></div>
+            <div style="margin-top:8px"><span id="modalIncident" class="tag"></span></div>
+          </div>
+          <div style="text-align:right">
+            <button id="closeModal" class="secondary">Close</button>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <strong>Notes</strong>
+          <p id="modalNotes" style="margin:6px 0;color:#333"></p>
+          <strong>Images</strong>
+          <div class="images" id="modalImages"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/*
+  Demo directory:
+  - Generates 5000 fictional profiles in browser (random names)
+  - Password protection (demo only) using sessionStorage
+  - Search, pagination, profile modal with images (picsum placeholders)
+  - Replace data step with your own lawful dataset if you have consent
+*/
+
+// --- util: simple pseudo-random deterministic name generator ---
+function seededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function(){
+    s = s * 16807 % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+function randomName(rng){
+  const first = ["Alex","Sam","Taylor","Jordan","Chris","Taylor","Morgan","Casey","Jamie","Lee","Avery","Riley","Quinn","Devin","Sky","Rowan"];
+  const last = ["Smith","Johnson","Brown","Taylor","Anderson","Thomas","Jackson","White","Harris","Martin","Thompson","Garcia","Martinez"];
+  return first[Math.floor(rng()*first.length)] + ' ' + last[Math.floor(rng()*last.length)];
+}
+
+// --- generate N fictional entries (fast) ---
+const TOTAL = 5000;
+let DATA = [];
+function generateData(){
+  DATA = [];
+  // use seeded RNG so repeated loads produce same list for demo convenience
+  const rng = seededRandom(123456);
+  for(let i=0;i<TOTAL;i++){
+    const name = randomName(rng);
+    const incidents = Math.floor(rng()*20); // 0..19
+    const id = 'id-'+(10000+i);
+    const seed = Math.abs(Math.floor(rng()*1000000));
+    const thumb = `https://picsum.photos/seed/${seed}/200/140`;
+    const images = [];
+    const imagesCount = 2 + (seed % 4);
+    for(let j=0;j<imagesCount;j++){
+      images.push(`https://picsum.photos/seed/${seed+j}/400/240`);
+    }
+    DATA.push({
+      id, name,
+      incidents,
+      thumb,
+      images,
+      notes: `This is fictional demo data for ${name}. Use for testing only.`,
+      added: Date.now() - Math.floor(rng()*1000*60*60*24*400)
+    });
+  }
+}
+generateData();
+
+// --- Pagination/search state ---
+let state = { page: 1, perPage: 20, query: '', maxInc: null, results: DATA.slice() };
+
+// --- UI references ---
+const pwScreen = document.getElementById('passwordScreen');
+const pwInput = document.getElementById('passwordInput');
+const pwBtn = document.getElementById('pwBtn');
+const directoryUI = document.getElementById('directoryUI');
+const listEl = document.getElementById('list');
+const totalCount = document.getElementById('totalCount');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const resetBtn = document.getElementById('resetBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const pageInfo = document.getElementById('pageInfo');
+const profileModal = document.getElementById('profileModal');
+const modalName = document.getElementById('modalName');
+const modalThumb = document.getElementById('modalThumb');
+const modalMeta = document.getElementById('modalMeta');
+const modalNotes = document.getElementById('modalNotes');
+const modalImages = document.getElementById('modalImages');
+const modalIncident = document.getElementById('modalIncident');
+const closeModal = document.getElementById('closeModal');
+const maxIncInput = document.getElementById('maxInc');
+const applyFilterBtn = document.getElementById('applyFilter');
+
+// --- simple session "password" check (demo only) ---
+const DEMO_PASSWORD = 'demo-pass';
+pwBtn.addEventListener('click', ()=>{
+  const v = pwInput.value || '';
+  if(v === DEMO_PASSWORD){
+    sessionStorage.setItem('demo_pw', v); // session-only
+    showDirectory();
+  } else {
+    alert('Wrong password (demo: demo-pass). This demo uses fictional data only.');
+  }
+});
+
+function showDirectory(){
+  pwScreen.style.display = 'none';
+  directoryUI.style.display = 'block';
+  state.results = DATA.slice();
+  state.page = 1;
+  render();
+}
+
+// --- search & filter ---
+function applyFilters(){
+  let res = DATA.slice();
+  const q = (state.query || '').trim().toLowerCase();
+  if(q){
+    res = res.filter(it => it.name.toLowerCase().includes(q));
+  }
+  if(state.maxInc !== null && state.maxInc !== ''){
+    const maxv = Number(state.maxInc);
+    if(!isNaN(maxv)) res = res.filter(it => it.incidents <= maxv);
+  }
+  state.results = res;
+  state.page = 1;
+}
+searchBtn.addEventListener('click', ()=>{
+  state.query = searchInput.value;
+  state.maxInc = maxIncInput.value;
+  applyFilters();
+  render();
+});
+resetBtn.addEventListener('click', ()=>{
+  searchInput.value=''; maxIncInput.value=''; state.query=''; state.maxInc=null; state.results = DATA.slice(); state.page=1; render();
+});
+applyFilterBtn.addEventListener('click', ()=>{
+  state.query = searchInput.value;
+  state.maxInc = maxIncInput.value;
+  applyFilters();
+  render();
+});
+
+// --- paging & rendering ---
+function render(){
+  const total = state.results.length;
+  totalCount.textContent = total;
+  const per = state.perPage;
+  const maxPage = Math.max(1, Math.ceil(total / per));
+  if(state.page > maxPage) state.page = maxPage;
+  const start = (state.page-1)*per;
+  const pageItems = state.results.slice(start, start+per);
+
+  listEl.innerHTML = '';
+  pageItems.forEach(it=>{
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <img class="thumb" src="${it.thumb}" alt="pic" />
+      <div class="meta">
+        <h3>${it.name}</h3>
+        <p class="small">${new Date(it.added).toLocaleDateString()} • ID: ${it.id}</p>
+      </div>
+      <div class="right">
+        <div class="small">Incidents</div>
+        <div style="font-weight:700">${it.incidents}</div>
+        <div style="margin-top:8px"><button data-id="${it.id}" class="small">View</button></div>
+      </div>
+    `;
+    listEl.appendChild(div);
+  });
+
+  pageInfo.textContent = `Page ${state.page} / ${maxPage}`;
+  prevBtn.disabled = (state.page <= 1);
+  nextBtn.disabled = (state.page >= maxPage);
+
+  // attach view buttons
+  listEl.querySelectorAll('button[data-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-id');
+      const item = DATA.find(x=>x.id===id);
+      if(item) openProfile(item);
+    });
+  });
+}
+
+// pager
+prevBtn.addEventListener('click', ()=>{ if(state.page>1) state.page--; render(); });
+nextBtn.addEventListener('click', ()=>{ state.page++; render(); });
+
+// open profile modal
+function openProfile(it){
+  modalName.textContent = it.name;
+  modalThumb.src = it.thumb;
+  modalMeta.textContent = `ID: ${it.id} • Added: ${new Date(it.added).toLocaleString()}`;
+  modalNotes.textContent = it.notes;
+  modalImages.innerHTML = '';
+  it.images.forEach(url => {
+    const im = document.createElement('img'); im.src = url; modalImages.appendChild(im);
+  });
+  modalIncident.textContent = `${it.incidents} incidents`;
+  profileModal.style.display = 'flex';
+}
+closeModal.addEventListener('click', ()=> profileModal.style.display = 'none');
+
+// search on enter
+searchInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ searchBtn.click(); } });
+
+// initial render placeholder (until unlocked)
+render();
+
+</script>
+</body>
+</html>
