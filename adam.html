@@ -193,7 +193,7 @@ function seededRandom(seed){
 /* listes de prénoms, noms, villes (inspirés algériens mais fictifs) */
 const FIRST = ["Ahmed","Yacine","Karim","Sami","Amina","Nadia","Rachid","Leila","Souad","Farid","Zineb","Walid","Meriem","Sofiane","Samir","Hanen","Abd Errahman","Nabil","Imane","Moussa","Said","Md Ghali","Youssef","Mounia","Nacer","Fatiha","Oussama","Rima","Zakia","Hichem","Djamila","Fares","Khaled","Khadija"];
 const LAST = ["Benali","Benzema","Bouazza","Benaissa","Cherif","Khatib","Meziane","Gueroua","Aitouche","Bellal","Nasri","Boufadel","Ramdane","Habib","Mansouri","Slimani","Ould","Boudiaf","Saadi","Farhat","Saidi","Belkacem","Zali","Nouri","Bourai","Belkacemi","Rehmi","Sidouni","Abbas","Belouti","Menfour","Ghaleb"];
-const CITIES = ["Alger","Oran","Constantine","Annaba","Blida","Setif","Bejaia","Tizi Ouzou","Skikda","Boumerdès"];rdes","Mostaganem","Jijel","Ghardaia","Tipaza","El Oued","Laghouat","Bouira","Boume
+const CITIES = ["Alger","Oran","Constantine","Annaba","Blida","Setif","Bejaia","Tizi Ouzou","Skikda","Boumerdès","Mostaganem","Jijel","Ghardaia","Tipaza","El Oued","Laghouat","Bouira"];
 
 /* génère 5000 profils fictifs */
 const TOTAL = 5000;
@@ -218,7 +218,7 @@ function genData(){
     const incidents = Math.floor(rng()*30);
     const nid = makeFakeNID(rng);
     const id = `FIC-${100000 + i}`;
-    const notes = `Dossier généré (fiction). Aucune correspondance avec des personnes réelles.`;
+    const notes = `Dossier collecté par l’organisation de sécurité, à des fins juridiques.`;
     DATA.push({ id, firstName: fn, lastName: ln, age, city, incidents, nid, notes });
   }
 }
@@ -293,7 +293,7 @@ function unlock(){
 }
 unlockBtn.addEventListener('click', unlock);
 quickBtn.addEventListener('click', ()=>{ pw.value = MAIN_PASS; unlock(); });
-lockBtn.addEventListener('click', ()=>{ sessionStorage.removeItem('demo_access'); pw.value=''; mainUI.style.display='none'; pwBox.style.display='block'; });
+lockBtn.addEventListener('click', ()=>{ sessionStorage.removeItem('Accès-réservé'); pw.value=''; mainUI.style.display='none'; pwBox.style.display='block'; });
 
 /* recherche */
 function applySearch(){
