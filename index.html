@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Secret Chat</title>
+  <title>Pro QR Secret Chat</title>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
@@ -18,8 +18,8 @@
     }
     
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #333;
+      background: linear-gradient(135deg, #1a1f36 0%, #0d0f1a 100%);
+      color: #e2e8f0;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -28,19 +28,20 @@
     }
     
     .app-container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      background: rgba(26, 32, 44, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
       overflow: hidden;
+      border: 1px solid #2d3748;
     }
     
     .screen {
       display: none;
       padding: 30px;
       flex-direction: column;
-      min-height: 500px;
+      min-height: 600px;
     }
     
     .active {
@@ -50,62 +51,66 @@
     h1 {
       text-align: center;
       margin-bottom: 24px;
-      color: #4a5568;
-      font-weight: 600;
+      color: #f7fafc;
+      font-weight: 700;
+      font-size: 1.8rem;
     }
     
     h2 {
       text-align: center;
       margin-bottom: 20px;
-      color: #4a5568;
-      font-weight: 500;
-      font-size: 1.3rem;
+      color: #e2e8f0;
+      font-weight: 600;
+      font-size: 1.4rem;
     }
     
     .logo {
       text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
+      font-size: 3rem;
+      margin-bottom: 15px;
     }
     
     .description {
       text-align: center;
-      color: #718096;
+      color: #a0aec0;
       margin-bottom: 30px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
     
     input, button {
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       margin-bottom: 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 16px;
+      transition: all 0.3s;
     }
     
     input {
-      background: #f7fafc;
-      border: 1px solid #e2e8f0;
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: #f7fafc;
     }
     
     input:focus {
       outline: none;
       border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
     }
     
     button {
-      background: #667eea;
+      background: linear-gradient(to right, #667eea, #764ba2);
       color: white;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
     }
     
     button:hover {
-      background: #5a6fd8;
       transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3);
     }
     
     button:active {
@@ -113,11 +118,11 @@
     }
     
     .btn-secondary {
-      background: #a0aec0;
+      background: #4a5568;
     }
     
     .btn-secondary:hover {
-      background: #90a0b3;
+      background: #2d3748;
     }
     
     .btn-danger {
@@ -129,32 +134,70 @@
     }
     
     .btn-small {
-      padding: 8px 16px;
+      padding: 10px 16px;
       font-size: 14px;
       width: auto;
     }
     
-    .qr-container {
+    /* QR Generator Styles */
+    .qr-generator-container {
       text-align: center;
       margin: 20px 0;
+      background: rgba(45, 55, 72, 0.7);
+      padding: 20px;
+      border-radius: 15px;
     }
     
     #myQr {
       display: inline-block;
-      padding: 10px;
+      padding: 15px;
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+    }
+    
+    .qr-size-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .qr-size-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    /* QR Scanner Styles */
+    .qr-scanner-container {
+      text-align: center;
+      margin: 20px 0;
     }
     
     #qrReader {
       width: 100%;
-      height: 250px;
-      background: #2d3748;
-      border-radius: 10px;
+      height: 350px;
+      background: #1a202c;
+      border-radius: 15px;
       overflow: hidden;
       margin: 20px 0;
       position: relative;
+      border: 2px solid #4a5568;
+    }
+    
+    #qrCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
     
     #qrGuide {
@@ -162,26 +205,82 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 180px;
-      height: 180px;
-      border: 2px solid #48bb78;
-      border-radius: 10px;
+      width: 220px;
+      height: 220px;
+      border: 3px solid #48bb78;
+      border-radius: 15px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+      animation: pulse 2s infinite;
     }
     
+    @keyframes pulse {
+      0% { border-color: #48bb78; }
+      50% { border-color: #68d391; }
+      100% { border-color: #48bb78; }
+    }
+    
+    #qrGuide::before {
+      content: "↑ Align QR Code Here ↑";
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    
+    .scanner-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .scanner-status {
+      text-align: center;
+      margin: 15px 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(45, 55, 72, 0.7);
+    }
+    
+    .scanner-status.scanning {
+      background: rgba(72, 187, 120, 0.2);
+      color: #68d391;
+    }
+    
+    .scanner-status.success {
+      background: rgba(72, 187, 120, 0.3);
+      color: #68d391;
+    }
+    
+    .scanner-status.error {
+      background: rgba(229, 62, 62, 0.3);
+      color: #fc8181;
+    }
+    
+    /* Contact List Styles */
     .contact-list {
       margin-top: 20px;
     }
     
     .contact-item {
-      background: #f7fafc;
-      padding: 16px;
-      margin-bottom: 12px;
-      border-radius: 10px;
+      background: rgba(45, 55, 72, 0.7);
+      padding: 18px;
+      margin-bottom: 15px;
+      border-radius: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: transform 0.2s;
+    }
+    
+    .contact-item:hover {
+      transform: translateY(-3px);
+      background: rgba(55, 65, 81, 0.7);
     }
     
     .contact-info {
@@ -190,55 +289,75 @@
     
     .contact-name {
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
+      color: #f7fafc;
     }
     
     .contact-time {
-      font-size: 12px;
-      color: #718096;
+      font-size: 13px;
+      color: #a0aec0;
     }
     
     .contact-actions {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
     
+    /* Chat Styles */
     .chat-area {
       flex: 1;
-      background: #f7fafc;
-      border-radius: 10px;
-      padding: 16px;
+      background: rgba(45, 55, 72, 0.7);
+      border-radius: 15px;
+      padding: 20px;
       margin: 20px 0;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      max-height: 350px;
     }
     
     .message {
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-radius: 18px;
-      margin-bottom: 12px;
-      max-width: 80%;
+      margin-bottom: 15px;
+      max-width: 85%;
       word-wrap: break-word;
+      position: relative;
     }
     
     .message.you {
-      background: #667eea;
+      background: linear-gradient(to right, #667eea, #764ba2);
       color: white;
       align-self: flex-end;
-      border-bottom-right-radius: 4px;
+      border-bottom-right-radius: 5px;
     }
     
     .message.peer {
-      background: #e2e8f0;
-      color: #2d3748;
+      background: #4a5568;
+      color: #f7fafc;
       align-self: flex-start;
-      border-bottom-left-radius: 4px;
+      border-bottom-left-radius: 5px;
+    }
+    
+    .message.system {
+      background: #2d3748;
+      color: #a0aec0;
+      align-self: center;
+      font-style: italic;
+      font-size: 0.9rem;
+      max-width: 100%;
+      text-align: center;
+    }
+    
+    .message-time {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 5px;
     }
     
     .message-input-container {
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
     
     .message-input-container input {
@@ -249,32 +368,38 @@
     .message-input-container button {
       width: auto;
       margin-bottom: 0;
-      padding: 14px 20px;
+      padding: 16px 20px;
+      border-radius: 12px;
     }
     
     .status {
       display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 13px;
       font-weight: 600;
-      margin-left: 10px;
     }
     
     .status.online {
-      background: #c6f6d5;
-      color: #22543d;
+      background: rgba(72, 187, 120, 0.2);
+      color: #68d391;
     }
     
     .status.offline {
-      background: #fed7d7;
-      color: #742a2a;
+      background: rgba(229, 62, 62, 0.2);
+      color: #fc8181;
+    }
+    
+    .status.connecting {
+      background: rgba(237, 137, 54, 0.2);
+      color: #f6ad55;
     }
     
     .nav-buttons {
       display: flex;
       justify-content: space-between;
       margin-top: 20px;
+      gap: 15px;
     }
     
     .nav-buttons button {
@@ -284,11 +409,18 @@
     .empty-state {
       text-align: center;
       padding: 40px 20px;
-      color: #718096;
+      color: #a0aec0;
     }
     
     .empty-state p {
       margin-bottom: 20px;
+    }
+    
+    .scan-hint {
+      text-align: center;
+      margin-top: 15px;
+      color: #a0aec0;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -296,17 +428,17 @@
   <div class="app-container">
     <!-- Password Screen -->
     <div id="passwordScreen" class="screen active">
-      <div class="logo">🔒</div>
-      <h1>Simple Secret Chat</h1>
-      <p class="description">Set a password to encrypt your chat data</p>
-      <input type="password" id="passwordInput" placeholder="Enter your password">
+      <div class="logo">🔐</div>
+      <h1>Pro QR Secret Chat</h1>
+      <p class="description">Set a master password to encrypt all your chat data securely</p>
+      <input type="password" id="passwordInput" placeholder="Enter your password" autocomplete="off">
       <button onclick="setPassword()">Continue</button>
     </div>
 
     <!-- Contacts Screen -->
     <div id="contactsScreen" class="screen">
       <h1>Contacts</h1>
-      <p class="description">Add contacts by scanning their QR codes</p>
+      <p class="description">Add contacts by scanning their QR codes or share yours</p>
       
       <div class="nav-buttons">
         <button class="btn-secondary" onclick="showQrGenerator()">My QR Code</button>
@@ -326,26 +458,46 @@
     <!-- QR Generator Screen -->
     <div id="qrGeneratorScreen" class="screen">
       <h1>My QR Code</h1>
-      <p class="description">Share this code with others to connect</p>
+      <p class="description">Share this code with others to connect securely</p>
       
-      <div class="qr-container">
+      <div class="qr-generator-container">
         <div id="myQr"></div>
+        
+        <div class="qr-size-controls">
+          <div class="qr-size-btn btn-secondary" onclick="changeQrSize(256)">S</div>
+          <div class="qr-size-btn" onclick="changeQrSize(320)">M</div>
+          <div class="qr-size-btn btn-secondary" onclick="changeQrSize(400)">L</div>
+        </div>
+        
+        <button class="btn-secondary" onclick="copyQrData()">Copy QR Data</button>
       </div>
       
-      <button class="btn-secondary" onclick="copyQrData()">Copy QR Data</button>
       <button onclick="showContactsScreen()">Back to Contacts</button>
     </div>
 
     <!-- QR Scanner Screen -->
     <div id="qrScannerScreen" class="screen">
-      <h1>Scan QR Code</h1>
-      <p class="description">Point your camera at a QR code</p>
+      <h1>Pro QR Scanner</h1>
+      <p class="description">Point your camera at a QR code to scan</p>
       
-      <div id="qrReader">
-        <div id="qrGuide"></div>
+      <div class="qr-scanner-container">
+        <div id="qrReader">
+          <canvas id="qrCanvas"></canvas>
+          <div id="qrGuide"></div>
+        </div>
+        
+        <div id="scannerStatus" class="scanner-status">
+          Ready to scan
+        </div>
+        
+        <div class="scanner-controls">
+          <button id="startScannerBtn" onclick="startScanner()">Start Scanner</button>
+          <button id="flipCameraBtn" class="btn-secondary" onclick="flipCamera()" style="display:none;">Flip Camera</button>
+        </div>
+        
+        <p class="scan-hint">Ensure good lighting and hold the QR code steady for best results</p>
       </div>
       
-      <button onclick="startScanner()">Start Camera</button>
       <button class="btn-secondary" onclick="showContactsScreen()">Cancel</button>
     </div>
 
@@ -382,6 +534,10 @@
     let video = null;
     let scanActive = false;
     let currentQrData = null;
+    let qrSize = 320;
+    let currentFacingMode = "environment";
+    let scanInterval = null;
+    let canvasContext = null;
     
     // TURN server
     const TURN_SERVER = {
@@ -393,13 +549,17 @@
     // Initialize app
     document.addEventListener('DOMContentLoaded', () => {
       // Check if we already have a password set
-      const savedPassword = localStorage.getItem('simple_chat_password');
+      const savedPassword = localStorage.getItem('pro_qr_chat_password');
       if (savedPassword) {
         MASTER_PASSWORD = savedPassword;
         showContactsScreen();
       }
       
       loadContacts();
+      
+      // Initialize canvas context
+      const canvas = document.getElementById('qrCanvas');
+      canvasContext = canvas.getContext('2d');
     });
 
     // Password functions
@@ -410,8 +570,13 @@
         return;
       }
       
+      if (pwd.length < 4) {
+        alert('Password should be at least 4 characters long');
+        return;
+      }
+      
       MASTER_PASSWORD = pwd;
-      localStorage.setItem('simple_chat_password', pwd);
+      localStorage.setItem('pro_qr_chat_password', pwd);
       document.getElementById('passwordInput').value = '';
       showContactsScreen();
     }
@@ -432,6 +597,7 @@
     function showQrScanner() {
       hideAllScreens();
       document.getElementById('qrScannerScreen').classList.add('active');
+      stopScanner(); // Ensure any previous scanner is stopped
     }
 
     function showChatScreen() {
@@ -452,7 +618,7 @@
         window.MY_KEYPAIR = keyPair;
         
         const pc = new RTCPeerConnection({ iceServers: [TURN_SERVER] });
-        pc.createDataChannel('simple-chat');
+        pc.createDataChannel('pro-qr-chat');
         
         pc.onicecandidate = (e) => {
           if (e.candidate) return;
@@ -465,15 +631,19 @@
           const qrData = JSON.stringify({
             type: 'offer',
             sdp: offer,
-            publicKey: nacl.util.encodeBase64(keyPair.publicKey)
+            publicKey: nacl.util.encodeBase64(keyPair.publicKey),
+            timestamp: Date.now()
           });
           
           currentQrData = qrData;
           document.getElementById('myQr').innerHTML = '';
           new QRCode(document.getElementById('myQr'), {
             text: qrData,
-            width: 200,
-            height: 200
+            width: qrSize,
+            height: qrSize,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
           });
           
           pc.close();
@@ -484,6 +654,11 @@
         console.error('Error generating QR:', e);
         alert('Failed to generate QR code. Please try again.');
       }
+    }
+
+    function changeQrSize(size) {
+      qrSize = size;
+      generateMyQr();
     }
 
     function copyQrData() {
@@ -509,68 +684,150 @@
         });
     }
 
-    // QR Scanner functions
+    // Enhanced QR Scanner functions
     async function startScanner() {
       const qrReader = document.getElementById('qrReader');
-      qrReader.innerHTML = `
-        <video playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;"></video>
-        <div id="qrGuide"></div>
-      `;
-      video = qrReader.querySelector('video');
+      const startBtn = document.getElementById('startScannerBtn');
+      const flipBtn = document.getElementById('flipCameraBtn');
+      
+      // Update UI
+      startBtn.textContent = 'Starting...';
+      startBtn.disabled = true;
+      updateScannerStatus('Initializing camera...', 'scanning');
       
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment" } 
+          video: { 
+            facingMode: currentFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
         });
+        
+        // Create video element if it doesn't exist
+        if (!video) {
+          video = document.createElement('video');
+          video.setAttribute('playsinline', 'true');
+          video.setAttribute('autoplay', 'true');
+          video.setAttribute('muted', 'true');
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          qrReader.appendChild(video);
+        }
+        
         video.srcObject = stream;
         
-        scanActive = true;
-        requestAnimationFrame(tick);
+        // Wait for video to be ready
+        video.addEventListener('loadedmetadata', () => {
+          // Set canvas size to match video
+          const canvas = document.getElementById('qrCanvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          // Update UI
+          startBtn.style.display = 'none';
+          flipBtn.style.display = 'inline-block';
+          updateScannerStatus('Scanning for QR codes...', 'scanning');
+          
+          // Start scanning loop
+          scanActive = true;
+          scanInterval = setInterval(scanFrame, 100); // Scan every 100ms
+        });
+        
       } catch (err) {
-        alert('Camera access denied. Please allow camera permission and try again.');
+        console.error('Camera error:', err);
+        updateScannerStatus('Camera access denied. Please allow camera permission.', 'error');
+        startBtn.textContent = 'Try Again';
+        startBtn.disabled = false;
       }
     }
 
-    function tick() {
-      if (!scanActive || !video || video.readyState < 2) {
-        requestAnimationFrame(tick);
-        return;
+    function stopScanner() {
+      scanActive = false;
+      if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
       }
+      
+      if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+      
+      const startBtn = document.getElementById('startScannerBtn');
+      const flipBtn = document.getElementById('flipCameraBtn');
+      
+      startBtn.style.display = 'inline-block';
+      startBtn.textContent = 'Start Scanner';
+      startBtn.disabled = false;
+      flipBtn.style.display = 'none';
+      
+      updateScannerStatus('Scanner stopped', '');
+    }
 
+    function flipCamera() {
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      stopScanner();
+      startScanner();
+    }
+
+    function scanFrame() {
+      if (!scanActive || !video || video.readyState < 2) return;
+      
       try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Draw video frame to canvas
+        canvasContext.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
         
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // Get image data from canvas
+        const imageData = canvasContext.getImageData(0, 0, video.videoWidth, video.videoHeight);
+        
+        // Try to decode QR code
         const code = jsQR(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: "dontInvert",
         });
-
+        
         if (code) {
+          // QR code found!
+          updateScannerStatus('QR code detected!', 'success');
+          
           try {
             const data = JSON.parse(code.data.trim());
             if (data.type === 'offer' && data.sdp && data.publicKey) {
-              scanActive = false;
-              if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-              }
-              saveContact(data);
-              showContactsScreen();
+              // Valid QR code, process it
+              processScannedQR(data);
               return;
+            } else {
+              updateScannerStatus('Invalid QR code format', 'error');
             }
           } catch (e) {
             console.error("QR parse error:", e);
+            updateScannerStatus('Invalid QR code data', 'error');
           }
         }
       } catch (e) {
         console.error("Scanning error:", e);
       }
+    }
 
-      if (scanActive) {
-        requestAnimationFrame(tick);
+    function processScannedQR(data) {
+      // Stop scanner
+      stopScanner();
+      
+      // Add a small delay for UX
+      setTimeout(() => {
+        saveContact(data);
+        showContactsScreen();
+        alert('Contact added successfully!');
+      }, 500);
+    }
+
+    function updateScannerStatus(message, type) {
+      const statusEl = document.getElementById('scannerStatus');
+      statusEl.textContent = message;
+      statusEl.className = 'scanner-status';
+      
+      if (type) {
+        statusEl.classList.add(type);
       }
     }
 
@@ -589,7 +846,6 @@
         
         CONTACTS.push(contact);
         saveContactsToStorage();
-        alert('Contact added successfully!');
       } catch (e) {
         console.error('Error saving contact:', e);
         alert('Failed to save contact. Please try again.');
@@ -600,14 +856,14 @@
       if (!MASTER_PASSWORD) return;
       try {
         const encrypted = encryptData(JSON.stringify(CONTACTS), MASTER_PASSWORD);
-        localStorage.setItem('simple_chat_contacts', encrypted);
+        localStorage.setItem('pro_qr_chat_contacts', encrypted);
       } catch (e) {
         console.error('Error saving contacts:', e);
       }
     }
 
     function loadContacts() {
-      const encrypted = localStorage.getItem('simple_chat_contacts');
+      const encrypted = localStorage.getItem('pro_qr_chat_contacts');
       if (!encrypted || !MASTER_PASSWORD) return;
       
       try {
@@ -697,7 +953,7 @@
       const answer = await PEER_CONNECTION.createAnswer();
       await PEER_CONNECTION.setLocalDescription(answer);
       
-      updateStatus('Connecting...', 'offline');
+      updateStatus('Connecting...', 'connecting');
     }
     
     function setupDataChannel() {
@@ -742,7 +998,16 @@
       
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${sender}`;
-      messageDiv.textContent = text;
+      
+      const messageText = document.createElement('div');
+      messageText.textContent = text;
+      messageDiv.appendChild(messageText);
+      
+      const messageTime = document.createElement('div');
+      messageTime.className = 'message-time';
+      messageTime.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      messageDiv.appendChild(messageTime);
+      
       chatArea.appendChild(messageDiv);
       chatArea.scrollTop = chatArea.scrollHeight;
     }
