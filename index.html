@@ -1,104 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Simple Secret Chat — Enhanced QR</title>
-
-  <!-- libs -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro QR Secret Chat</title>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
   <style>
     /* Modern Reset & Base Styles */
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-    html,body { height:100%; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    
     body {
-      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-      display:flex; align-items:center; justify-content:center; padding:20px;
-      min-height:100vh; color:#333;
+      background: linear-gradient(135deg, #1a1f36 0%, #0d0f1a 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
+    
     .app-container {
-      background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.2);
-      width:100%; max-width:420px; overflow:hidden;
+      background: rgba(26, 32, 44, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 450px;
+      overflow: hidden;
+      border: 1px solid #2d3748;
     }
-    .screen { display:none; padding:22px; flex-direction:column; min-height:560px; }
-    .active { display:flex; }
-    h1 { text-align:center; margin-bottom:14px; color:#4a5568; font-weight:600; }
-    h2 { text-align:center; margin-bottom:12px; color:#4a5568; font-weight:500; font-size:1.2rem; }
-    .logo { text-align:center; font-size:2.2rem; margin-bottom:8px; }
-    .description { text-align:center; color:#718096; margin-bottom:18px; line-height:1.5; }
-    input, button, select { width:100%; padding:12px; margin-bottom:12px; border:none; border-radius:10px; font-size:15px; }
-    input { background:#f7fafc; border:1px solid #e2e8f0; }
-    input:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.08); }
-    button { background:#667eea; color:white; font-weight:600; cursor:pointer; transition:all .15s; }
-    button:hover { background:#5a6fd8; transform:translateY(-2px); }
-    .btn-secondary { background:#a0aec0; color:#fff; }
-    .btn-danger { background:#e53e3e; color:#fff; }
-    .btn-small { padding:8px 12px; font-size:14px; width:auto; border-radius:8px; }
-    .qr-container { text-align:center; margin:14px 0; display:flex; flex-direction:column; align-items:center; gap:10px; }
-    #myQr { display:inline-block; padding:10px; background:white; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,.08); }
-    #qrMeta { font-size:12px; color:#718096; }
-    #qrReader { width:100%; height:260px; background:#0f1724; border-radius:10px; overflow:hidden; margin:12px 0; position:relative; display:flex; align-items:center; justify-content:center; }
+    
+    .screen {
+      display: none;
+      padding: 30px;
+      flex-direction: column;
+      min-height: 600px;
+    }
+    
+    .active {
+      display: flex;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #f7fafc;
+      font-weight: 700;
+      font-size: 1.8rem;
+    }
+    
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      font-weight: 600;
+      font-size: 1.4rem;
+    }
+    
+    .logo {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+    
+    .description {
+      text-align: center;
+      color: #a0aec0;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    
+    input, button {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    input {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: #f7fafc;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+    
+    button {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+      background: #2d3748;
+    }
+    
+    .btn-danger {
+      background: #e53e3e;
+    }
+    
+    .btn-danger:hover {
+      background: #c53030;
+    }
+    
+    .btn-small {
+      padding: 10px 16px;
+      font-size: 14px;
+      width: auto;
+    }
+    
+    /* QR Generator Styles */
+    .qr-generator-container {
+      text-align: center;
+      margin: 20px 0;
+      background: rgba(45, 55, 72, 0.7);
+      padding: 20px;
+      border-radius: 15px;
+    }
+    
+    #myQr {
+      display: inline-block;
+      padding: 15px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+    }
+    
+    .qr-size-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .qr-size-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    /* QR Scanner Styles - FIXED CAMERA DISPLAY */
+    .qr-scanner-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    #qrReader {
+      width: 100%;
+      height: 350px;
+      background: #1a202c;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 20px 0;
+      position: relative;
+      border: 2px solid #4a5568;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #qrVideo {
+      max-width: 100%;
+      max-height: 100%;
+      /* Let the video maintain its natural aspect ratio */
+      width: auto;
+      height: auto;
+    }
+    
+    #qrCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none; /* Hidden but used for scanning */
+    }
+    
     #qrGuide {
-      position:absolute; pointer-events:none; width:220px; height:220px; border-radius:10px;
-      box-shadow:0 0 0 9999px rgba(0,0,0,.55); border:2px dashed rgba(72,187,120,.9);
-      display:flex; align-items:center; justify-content:center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 220px;
+      height: 220px;
+      border: 3px solid #48bb78;
+      border-radius: 15px;
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+      animation: pulse 2s infinite;
     }
-    #scanOverlay { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; padding:12px; pointer-events:none; }
-    .progress-wrap { pointer-events:auto; width:92%; background:rgba(255,255,255,.06); border-radius:12px; padding:6px; }
-    .progress-bar { height:8px; border-radius:8px; background:linear-gradient(90deg,#48bb78,#34d399); width:0%; transition:width .2s; }
-    .progress-text { font-size:12px; color:#e6fffa; text-align:center; margin-top:6px; }
-    .contact-list { margin-top:10px; }
-    .contact-item { background:#f7fafc; padding:12px; margin-bottom:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
-    .contact-info { flex:1; }
-    .contact-name { font-weight:600; margin-bottom:4px; }
-    .contact-time { font-size:12px; color:#718096; }
-    .contact-actions { display:flex; gap:8px; }
-    .chat-area { flex:1; background:#f7fafc; border-radius:10px; padding:12px; margin:14px 0; overflow-y:auto; display:flex; flex-direction:column; max-height:300px; }
-    .message { padding:10px 14px; border-radius:18px; margin-bottom:10px; max-width:80%; word-wrap:break-word; }
-    .message.you { background:#667eea; color:white; align-self:flex-end; border-bottom-right-radius:4px; }
-    .message.peer { background:#e2e8f0; color:#2d3748; align-self:flex-start; border-bottom-left-radius:4px; }
-    .message.system { background:transparent; color:#4a5568; font-size:13px; align-self:center; }
-    .message-input-container { display:flex; gap:10px; }
-    .message-input-container input { flex:1; margin-bottom:0; }
-    .message-input-container button { width:auto; margin-bottom:0; padding:12px 16px; }
-    .status { display:inline-block; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:600; margin-left:10px; }
-    .status.online { background:#c6f6d5; color:#22543d; }
-    .status.offline { background:#fed7d7; color:#742a2a; }
-    .nav-buttons { display:flex; justify-content:space-between; gap:8px; margin-top:10px; }
-    .nav-buttons button { width:48%; }
-    .empty-state { text-align:center; padding:28px 12px; color:#718096; }
-    .small-row { display:flex; gap:8px; align-items:center; }
-    .toggle { padding:8px 10px; background:#fff; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
-    .controls { display:flex; gap:8px; width:100%; }
+    
+    @keyframes pulse {
+      0% { border-color: #48bb78; }
+      50% { border-color: #68d391; }
+      100% { border-color: #48bb78; }
+    }
+    
+    #qrGuide::before {
+      content: "↑ Align QR Code Here ↑";
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    
+    .scanner-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .scanner-status {
+      text-align: center;
+      margin: 15px 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(45, 55, 72, 0.7);
+    }
+    
+    .scanner-status.scanning {
+      background: rgba(72, 187, 120, 0.2);
+      color: #68d391;
+    }
+    
+    .scanner-status.success {
+      background: rgba(72, 187, 120, 0.3);
+      color: #68d391;
+    }
+    
+    .scanner-status.error {
+      background: rgba(229, 62, 62, 0.3);
+      color: #fc8181;
+    }
+    
+    /* Contact List Styles */
+    .contact-list {
+      margin-top: 20px;
+    }
+    
+    .contact-item {
+      background: rgba(45, 55, 72, 0.7);
+      padding: 18px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s;
+    }
+    
+    .contact-item:hover {
+      transform: translateY(-3px);
+      background: rgba(55, 65, 81, 0.7);
+    }
+    
+    .contact-info {
+      flex: 1;
+    }
+    
+    .contact-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #f7fafc;
+    }
+    
+    .contact-time {
+      font-size: 13px;
+      color: #a0aec0;
+    }
+    
+    .contact-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    /* Chat Styles */
+    .chat-area {
+      flex: 1;
+      background: rgba(45, 55, 72, 0.7);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      max-height: 350px;
+    }
+    
+    .message {
+      padding: 12px 16px;
+      border-radius: 18px;
+      margin-bottom: 15px;
+      max-width: 85%;
+      word-wrap: break-word;
+      position: relative;
+    }
+    
+    .message.you {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+    
+    .message.peer {
+      background: #4a5568;
+      color: #f7fafc;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+    }
+    
+    .message.system {
+      background: #2d3748;
+      color: #a0aec0;
+      align-self: center;
+      font-style: italic;
+      font-size: 0.9rem;
+      max-width: 100%;
+      text-align: center;
+    }
+    
+    .message-time {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 5px;
+    }
+    
+    .message-input-container {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .message-input-container input {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    .message-input-container button {
+      width: auto;
+      margin-bottom: 0;
+      padding: 16px 20px;
+      border-radius: 12px;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .status.online {
+      background: rgba(72, 187, 120, 0.2);
+      color: #68d391;
+    }
+    
+    .status.offline {
+      background: rgba(229, 62, 62, 0.2);
+      color: #fc8181;
+    }
+    
+    .status.connecting {
+      background: rgba(237, 137, 54, 0.2);
+      color: #f6ad55;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 15px;
+    }
+    
+    .nav-buttons button {
+      width: 48%;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #a0aec0;
+    }
+    
+    .empty-state p {
+      margin-bottom: 20px;
+    }
+    
+    .scan-hint {
+      text-align: center;
+      margin-top: 15px;
+      color: #a0aec0;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <div class="app-container">
     <!-- Password Screen -->
     <div id="passwordScreen" class="screen active">
-      <div class="logo">🔒</div>
-      <h1>Simple Secret Chat</h1>
-      <p class="description">Set a password to encrypt your chat data</p>
-      <input type="password" id="passwordInput" placeholder="Enter your password" autocomplete="new-password">
+      <div class="logo">🔐</div>
+      <h1>Pro QR Secret Chat</h1>
+      <p class="description">Set a master password to encrypt all your chat data securely</p>
+      <input type="password" id="passwordInput" placeholder="Enter your password" autocomplete="off">
       <button onclick="setPassword()">Continue</button>
     </div>
 
     <!-- Contacts Screen -->
     <div id="contactsScreen" class="screen">
       <h1>Contacts</h1>
-      <p class="description">Add contacts by scanning their QR codes</p>
-
+      <p class="description">Add contacts by scanning their QR codes or share yours</p>
+      
       <div class="nav-buttons">
         <button class="btn-secondary" onclick="showQrGenerator()">My QR Code</button>
         <button onclick="showQrScanner()">Scan QR Code</button>
       </div>
-
-      <div class="contact-list" id="contactsList"></div>
-
+      
+      <div class="contact-list" id="contactsList">
+        <!-- Contacts will be loaded here -->
+      </div>
+      
       <div id="noContacts" class="empty-state">
         <p>No contacts yet</p>
         <p>Scan a QR code to add your first contact</p>
@@ -108,487 +470,374 @@
     <!-- QR Generator Screen -->
     <div id="qrGeneratorScreen" class="screen">
       <h1>My QR Code</h1>
-      <p class="description">Share this code with others to connect</p>
-
-      <div class="qr-container">
+      <p class="description">Share this code with others to connect securely</p>
+      
+      <div class="qr-generator-container">
         <div id="myQr"></div>
-        <div id="qrMeta"></div>
+        
+        <div class="qr-size-controls">
+          <div class="qr-size-btn btn-secondary" onclick="changeQrSize(256)">S</div>
+          <div class="qr-size-btn" onclick="changeQrSize(320)">M</div>
+          <div class="qr-size-btn btn-secondary" onclick="changeQrSize(400)">L</div>
+        </div>
+        
+        <button class="btn-secondary" onclick="copyQrData()">Copy QR Data</button>
       </div>
-
-      <div class="controls" style="gap:8px;">
-        <button class="btn-small" onclick="copyQrData()">Copy QR Data</button>
-        <button class="btn-small btn-secondary" onclick="downloadQr()">Download</button>
-        <button class="btn-small" onclick="showContactsScreen()">Back</button>
-      </div>
+      
+      <button onclick="showContactsScreen()">Back to Contacts</button>
     </div>
 
     <!-- QR Scanner Screen -->
     <div id="qrScannerScreen" class="screen">
-      <h1>Scan QR Code</h1>
-      <p class="description">Point your camera at a QR code. Use the guide area for best results.</p>
-
-      <div id="qrReader">
-        <div id="qrGuide"></div>
-        <div id="scanOverlay">
-          <div class="progress-wrap">
-            <div class="progress-bar" id="scanProgressBar"></div>
-            <div class="progress-text" id="scanProgressText">Waiting for camera...</div>
-          </div>
+      <h1>Pro QR Scanner</h1>
+      <p class="description">Point your camera at a QR code to scan</p>
+      
+      <div class="qr-scanner-container">
+        <div id="qrReader">
+          <video id="qrVideo" playsinline autoplay muted></video>
+          <canvas id="qrCanvas"></canvas>
+          <div id="qrGuide"></div>
         </div>
+        
+        <div id="scannerStatus" class="scanner-status">
+          Ready to scan
+        </div>
+        
+        <div class="scanner-controls">
+          <button id="startScannerBtn" onclick="startScanner()">Start Scanner</button>
+          <button id="flipCameraBtn" class="btn-secondary" onclick="flipCamera()" style="display:none;">Flip Camera</button>
+        </div>
+        
+        <p class="scan-hint">Ensure good lighting and hold the QR code steady for best results</p>
       </div>
-
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button onclick="startScanner()" id="startCameraBtn">Start Camera</button>
-        <button class="btn-secondary" onclick="stopScanner()" id="stopCameraBtn" disabled>Stop</button>
-      </div>
-
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="btn-secondary" onclick="triggerFileUpload()">Upload Image</button>
-        <input type="file" id="qrFileInput" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
-      </div>
-
-      <div style="display:flex; gap:8px; margin-top:10px;">
-        <button class="btn-small" id="torchBtn" onclick="toggleTorch()" style="display:none">Toggle Torch</button>
-        <button class="btn-small" onclick="showContactsScreen()">Cancel</button>
-      </div>
+      
+      <button class="btn-secondary" onclick="showContactsScreen()">Cancel</button>
     </div>
 
     <!-- Chat Screen -->
     <div id="chatScreen" class="screen">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 id="chatTitle">Chat</h2>
         <span id="chatStatus" class="status offline">Offline</span>
       </div>
-
+      
       <div class="chat-area" id="chatArea">
-        <div class="empty-state"><p>No messages yet</p><p>Start a conversation!</p></div>
+        <div class="empty-state">
+          <p>No messages yet</p>
+          <p>Start a conversation!</p>
+        </div>
       </div>
-
+      
       <div class="message-input-container">
-        <input type="text" id="messageInput" placeholder="Type a message..." disabled autocomplete="off">
-        <button onclick="sendMessage()" id="sendBtn" disabled>Send</button>
+        <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+        <button onclick="sendMessage()" disabled>Send</button>
       </div>
-
+      
       <button class="btn-secondary" onclick="closeChat()">Back to Contacts</button>
     </div>
   </div>
 
   <script>
-    /*******************************
-     * Global state
-     *******************************/
+    // Global state
     let MASTER_PASSWORD = null;
     let CURRENT_CONTACT = null;
     let PEER_CONNECTION = null;
     let DATA_CHANNEL = null;
     let CONTACTS = [];
-    let videoElem = null;
+    let video = null;
     let scanActive = false;
     let currentQrData = null;
-    let scanStartedAt = 0;
-    let scanAnimationFrame = null;
-    let videoStream = null;
-    let imageCapture = null;
-    let torchOn = false;
-    let qrCanvas = null;
-    let lastDetected = null;
-    let generatedQrBlob = null;
-
-    // TURN server placeholder
+    let qrSize = 320;
+    let currentFacingMode = "environment";
+    let scanInterval = null;
+    let canvasContext = null;
+    
+    // TURN server
     const TURN_SERVER = {
       urls: "turn:freeturn.net:3478",
       username: "free",
       credential: "free"
     };
 
-    /*******************************
-     * Initialization
-     *******************************/
+    // Initialize app
     document.addEventListener('DOMContentLoaded', () => {
-      const savedPassword = localStorage.getItem('simple_chat_password');
+      // Check if we already have a password set
+      const savedPassword = localStorage.getItem('pro_qr_chat_password');
       if (savedPassword) {
         MASTER_PASSWORD = savedPassword;
-        // only load contacts once we have password set
-        loadContacts();
         showContactsScreen();
       }
+      
+      loadContacts();
+      
+      // Initialize canvas context
+      const canvas = document.getElementById('qrCanvas');
+      canvasContext = canvas.getContext('2d');
     });
 
-    /*******************************
-     * Password
-     *******************************/
+    // Password functions
     function setPassword() {
       const pwd = document.getElementById('passwordInput').value;
-      if (!pwd) { alert('Please enter a password'); return; }
+      if (!pwd) {
+        alert('Please enter a password');
+        return;
+      }
+      
+      if (pwd.length < 4) {
+        alert('Password should be at least 4 characters long');
+        return;
+      }
+      
       MASTER_PASSWORD = pwd;
-      localStorage.setItem('simple_chat_password', pwd);
+      localStorage.setItem('pro_qr_chat_password', pwd);
       document.getElementById('passwordInput').value = '';
-      loadContacts();
       showContactsScreen();
     }
 
-    /*******************************
-     * Screen navigation
-     *******************************/
-    function hideAllScreens() {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    }
+    // Screen navigation
     function showContactsScreen() {
       hideAllScreens();
       document.getElementById('contactsScreen').classList.add('active');
       renderContacts();
     }
+
     function showQrGenerator() {
       hideAllScreens();
       document.getElementById('qrGeneratorScreen').classList.add('active');
       generateMyQr();
     }
+
     function showQrScanner() {
       hideAllScreens();
       document.getElementById('qrScannerScreen').classList.add('active');
-      // reset progress UI
-      updateProgressUI(0, 'Ready to scan. Press "Start Camera"');
+      stopScanner(); // Ensure any previous scanner is stopped
     }
+
     function showChatScreen() {
       hideAllScreens();
       document.getElementById('chatScreen').classList.add('active');
     }
 
-    /*******************************
-     * QR Generation (larger + download)
-     *******************************/
-    async function generateMyQr() {
-      try {
-        // create fresh keypair for each QR
-        const keyPair = nacl.box.keyPair();
-        window.MY_KEYPAIR = keyPair;
-
-        // create a lightweight offer SDP without ICE candidates (reduce QR size)
-        const pc = new RTCPeerConnection({ iceServers:[TURN_SERVER] });
-        pc.createDataChannel('simple-chat-preview'); // so offer contains datachannel capability
-
-        // gather local description
-        pc.onicecandidate = (e) => {
-          // we wait until all candidates are ready (null candidate signals end)
-          if (e.candidate) return;
-
-          let offer = pc.localDescription.sdp || '';
-          // strip local addresses and candidate lines to keep string small
-          offer = offer.replace(/a=candidate:.*\r\n/g, '');
-          offer = offer.replace(/.*\.local.*\r\n/g, '');
-
-          const qrDataObj = {
-            type: 'offer',
-            sdp: offer,
-            publicKey: nacl.util.encodeBase64(keyPair.publicKey),
-            ts: Date.now()
-          };
-          const qrDataStr = JSON.stringify(qrDataObj);
-          currentQrData = qrDataStr;
-
-          // render big QR
-          const qrContainer = document.getElementById('myQr');
-          qrContainer.innerHTML = '';
-          // bigger QR
-          const qr = new QRCode(qrContainer, { text: qrDataStr, width: 260, height: 260 });
-          // store small meta
-          document.getElementById('qrMeta').textContent = `Public key: ${qrDataObj.publicKey.slice(0,12)}... • ${new Date(qrDataObj.ts).toLocaleString()}`;
-
-          // generate a PNG blob for download/copy without re-rendering canvas each time
-          // QRCode lib inserts a <img> or <canvas>; capture it after a small timeout
-          setTimeout(() => {
-            try {
-              const img = qrContainer.querySelector('img') || qrContainer.querySelector('canvas');
-              if (img) {
-                if (img.tagName.toLowerCase() === 'img') {
-                  // convert dataURL to blob
-                  fetch(img.src).then(r => r.blob()).then(b => generatedQrBlob = b).catch(()=>generatedQrBlob=null);
-                } else {
-                  img.toBlob(b => generatedQrBlob = b);
-                }
-              }
-            } catch(e){ generatedQrBlob = null; }
-            // cleanup peer
-            try { pc.close(); } catch(_) {}
-          }, 250);
-        };
-
-        // create offer
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-      } catch (e) {
-        console.error('Error generating QR:', e);
-        alert('Failed to generate QR code. Try again.');
-      }
-    }
-
-    function copyQrData() {
-      if (!currentQrData) { alert('No QR data available'); return; }
-      navigator.clipboard.writeText(currentQrData).then(() => alert('QR data copied to clipboard!')).catch(err => {
-        console.warn('Clipboard write failed, fallback', err);
-        const ta = document.createElement('textarea'); ta.value = currentQrData; document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); document.body.removeChild(ta); alert('QR data copied (fallback).');
+    function hideAllScreens() {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
       });
     }
 
-    function downloadQr() {
-      if (generatedQrBlob) {
-        const url = URL.createObjectURL(generatedQrBlob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `simple_secret_chat_qr_${Date.now()}.png`;
-        document.body.appendChild(a); a.click();
-        a.remove(); URL.revokeObjectURL(url);
-      } else if (currentQrData) {
-        // fallback: open a new window with the QR text (user can save)
-        const w = window.open('', '_blank');
-        w.document.write('<pre>' + currentQrData.replace(/</g,'&lt;') + '</pre>');
-      } else {
-        alert('No QR to download yet. Generate one first.');
+    // QR Code functions
+    function generateMyQr() {
+      try {
+        const keyPair = nacl.box.keyPair();
+        window.MY_KEYPAIR = keyPair;
+        
+        const pc = new RTCPeerConnection({ iceServers: [TURN_SERVER] });
+        pc.createDataChannel('pro-qr-chat');
+        
+        pc.onicecandidate = (e) => {
+          if (e.candidate) return;
+          
+          let offer = pc.localDescription.sdp;
+          // Remove local candidates to reduce QR size
+          offer = offer.replace(/a=candidate:.*\r\n/g, '');
+          offer = offer.replace(/.*\.local.*\r\n/g, '');
+          
+          const qrData = JSON.stringify({
+            type: 'offer',
+            sdp: offer,
+            publicKey: nacl.util.encodeBase64(keyPair.publicKey),
+            timestamp: Date.now()
+          });
+          
+          currentQrData = qrData;
+          document.getElementById('myQr').innerHTML = '';
+          new QRCode(document.getElementById('myQr'), {
+            text: qrData,
+            width: qrSize,
+            height: qrSize,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+          
+          pc.close();
+        };
+        
+        pc.createOffer().then(offer => pc.setLocalDescription(offer));
+      } catch (e) {
+        console.error('Error generating QR:', e);
+        alert('Failed to generate QR code. Please try again.');
       }
     }
 
-    /*******************************
-     * QR Scanner: improved for mobile
-     *******************************/
-    function updateProgressUI(percent, text) {
-      const bar = document.getElementById('scanProgressBar');
-      const txt = document.getElementById('scanProgressText');
-      bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-      txt.textContent = text || '';
+    function changeQrSize(size) {
+      qrSize = size;
+      generateMyQr();
     }
 
+    function copyQrData() {
+      if (!currentQrData) {
+        alert('No QR data available');
+        return;
+      }
+      
+      navigator.clipboard.writeText(currentQrData)
+        .then(() => {
+          alert('QR data copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = currentQrData;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          alert('QR data copied to clipboard!');
+        });
+    }
+
+    // Enhanced QR Scanner functions - FIXED CAMERA DISPLAY
     async function startScanner() {
-      stopScanner(); // ensure clean
-      const qrReader = document.getElementById('qrReader');
-      qrReader.innerHTML = `
-        <video playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;"></video>
-        <div id="qrGuide"></div>
-      `;
-      videoElem = qrReader.querySelector('video');
-
-      // prefer environment camera and ask for high resolution when possible (helps phone autofocus)
-      const constraints = {
-        audio: false,
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
-      };
-
+      const startBtn = document.getElementById('startScannerBtn');
+      const flipBtn = document.getElementById('flipCameraBtn');
+      const qrVideo = document.getElementById('qrVideo');
+      
+      // Update UI
+      startBtn.textContent = 'Starting...';
+      startBtn.disabled = true;
+      updateScannerStatus('Initializing camera...', 'scanning');
+      
       try {
-        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoElem.srcObject = videoStream;
-        videoElem.setAttribute('playsinline', true);
-        await videoElem.play();
-
-        // prepare ImageCapture for torch + advanced controls if available
-        const [track] = videoStream.getVideoTracks();
-        try {
-          imageCapture = new ImageCapture(track);
-        } catch (e) {
-          imageCapture = null;
-        }
-
-        // show torch button if available
-        const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-        if (capabilities.torch || (capabilities && capabilities.torch === true)) {
-          document.getElementById('torchBtn').style.display = 'inline-block';
-        } else {
-          // some Android browsers expose applyConstraints with advanced --> try to show button anyway
-          if (typeof track.applyConstraints === 'function' && ('torch' in capabilities || 'fillLightMode' in capabilities)) {
-            document.getElementById('torchBtn').style.display = 'inline-block';
-          } else {
-            document.getElementById('torchBtn').style.display = 'none';
-          }
-        }
-
-        // disable start button, enable stop
-        document.getElementById('startCameraBtn').disabled = true;
-        document.getElementById('stopCameraBtn').disabled = false;
-
-        // prepare canvas once with size scaled to guide area for performance
-        qrCanvas = document.createElement('canvas');
-
-        scanActive = true;
-        scanStartedAt = performance.now();
-        lastDetected = null;
-        animateScan();
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: currentFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
+        });
+        
+        // Use the existing video element
+        video = qrVideo;
+        video.srcObject = stream;
+        
+        // Wait for video to be ready
+        video.addEventListener('loadedmetadata', () => {
+          // Set canvas size to match video's natural dimensions
+          const canvas = document.getElementById('qrCanvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          // Update UI
+          startBtn.style.display = 'none';
+          flipBtn.style.display = 'inline-block';
+          updateScannerStatus('Scanning for QR codes...', 'scanning');
+          
+          // Start scanning loop
+          scanActive = true;
+          scanInterval = setInterval(scanFrame, 100); // Scan every 100ms
+        });
+        
       } catch (err) {
-        console.error('Camera start failed', err);
-        alert('Camera access denied or not available. You can also upload an image of a QR code.');
-        updateProgressUI(0, 'Camera unavailable — try image upload');
+        console.error('Camera error:', err);
+        updateScannerStatus('Camera access denied. Please allow camera permission.', 'error');
+        startBtn.textContent = 'Try Again';
+        startBtn.disabled = false;
       }
     }
 
     function stopScanner() {
       scanActive = false;
-      if (scanAnimationFrame) { cancelAnimationFrame(scanAnimationFrame); scanAnimationFrame = null; }
-      if (videoElem && videoElem.srcObject) {
-        videoElem.srcObject.getTracks().forEach(t => t.stop());
-        videoElem.srcObject = null;
+      if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
       }
-      if (videoStream) {
-        videoStream.getTracks().forEach(t => t.stop());
-        videoStream = null;
+      
+      if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
       }
-      imageCapture = null;
-      document.getElementById('startCameraBtn').disabled = false;
-      document.getElementById('stopCameraBtn').disabled = true;
-      updateProgressUI(0, 'Camera stopped');
+      
+      const startBtn = document.getElementById('startScannerBtn');
+      const flipBtn = document.getElementById('flipCameraBtn');
+      
+      startBtn.style.display = 'inline-block';
+      startBtn.textContent = 'Start Scanner';
+      startBtn.disabled = false;
+      flipBtn.style.display = 'none';
+      
+      updateScannerStatus('Scanner stopped', '');
     }
 
-    async function animateScan() {
+    function flipCamera() {
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      stopScanner();
+      startScanner();
+    }
+
+    function scanFrame() {
+      if (!scanActive || !video || video.readyState < 2) return;
+      
       try {
-        const now = performance.now();
-        const elapsed = now - scanStartedAt;
-        // progress cycles every 8 seconds to give user a sense of progress
-        const cycleMs = 8000;
-        let percent = ((elapsed % cycleMs) / cycleMs) * 100;
-        updateProgressUI(percent, lastDetected ? 'Detected — verifying...' : `Scanning... ${Math.round(percent)}%`);
-
-        if (!scanActive || !videoElem || videoElem.readyState < 2) {
-          scanAnimationFrame = requestAnimationFrame(animateScan);
-          return;
-        }
-
-        // choose cropping to the center (guide area)
-        const vw = videoElem.videoWidth;
-        const vh = videoElem.videoHeight;
-        if (!vw || !vh) { scanAnimationFrame = requestAnimationFrame(animateScan); return; }
-
-        // guide square size ~60% of min dimension
-        const guideSize = Math.floor(Math.min(vw, vh) * 0.6);
-        const sx = Math.floor((vw - guideSize) / 2);
-        const sy = Math.floor((vh - guideSize) / 2);
-
-        // set canvas to smaller size to speed up processing
-        const targetSize = 400; // keep decent resolution for jsQR
-        qrCanvas.width = targetSize;
-        qrCanvas.height = targetSize;
-
-        const ctx = qrCanvas.getContext('2d');
-        // draw the centered region to canvas scaled down
-        ctx.drawImage(videoElem, sx, sy, guideSize, guideSize, 0, 0, targetSize, targetSize);
-
-        try {
-          const imageData = ctx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
-          if (code) {
-            // show a small bounding box overlay (optional) by storing detection
-            lastDetected = code;
-            // try parse
-            try {
-              const parsed = JSON.parse(code.data.trim());
-              if (parsed.type === 'offer' && parsed.sdp && parsed.publicKey) {
-                // success path
-                scanActive = false;
-                // stop camera
-                stopScanner();
-                // save contact
-                saveContact(parsed);
-                showContactsScreen();
-                updateProgressUI(100, 'QR parsed — contact saved!');
-                return;
-              } else {
-                // not the format we expect
-                lastDetected = null;
-              }
-            } catch (e) {
-              // not JSON or bad format — ignore
-              console.warn('QR content not JSON or unexpected', e);
-              lastDetected = null;
+        // Draw video frame to canvas (using natural dimensions)
+        canvasContext.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        
+        // Get image data from canvas
+        const imageData = canvasContext.getImageData(0, 0, video.videoWidth, video.videoHeight);
+        
+        // Try to decode QR code
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+        
+        if (code) {
+          // QR code found!
+          updateScannerStatus('QR code detected!', 'success');
+          
+          try {
+            const data = JSON.parse(code.data.trim());
+            if (data.type === 'offer' && data.sdp && data.publicKey) {
+              // Valid QR code, process it
+              processScannedQR(data);
+              return;
+            } else {
+              updateScannerStatus('Invalid QR code format', 'error');
             }
+          } catch (e) {
+            console.error("QR parse error:", e);
+            updateScannerStatus('Invalid QR code data', 'error');
           }
-        } catch (e) {
-          console.error('jsQR error', e);
         }
-
       } catch (e) {
-        console.error('scan loop err', e);
-      } finally {
-        if (scanActive) scanAnimationFrame = requestAnimationFrame(animateScan);
+        console.error("Scanning error:", e);
       }
     }
 
-    /*******************************
-     * Torch support (mobile)
-     *******************************/
-    async function toggleTorch() {
-      if (!videoStream) return;
-      const track = videoStream.getVideoTracks()[0];
-      if (!track) return;
-      try {
-        // try ImageCapture-level torch first
-        if (imageCapture && imageCapture.track && typeof track.applyConstraints === 'function') {
-          torchOn = !torchOn;
-          await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-          document.getElementById('torchBtn').textContent = torchOn ? 'Torch: ON' : 'Torch: OFF';
-          return;
-        }
-        // fallback: some browsers support 'torch' in applyConstraints capabilities
-        const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-        if ('torch' in capabilities) {
-          torchOn = !torchOn;
-          await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-          document.getElementById('torchBtn').textContent = torchOn ? 'Torch: ON' : 'Torch: OFF';
-          return;
-        }
-        alert('Torch control not available on this device/browser.');
-      } catch (err) {
-        console.warn('Torch toggle failed', err);
-        alert('Unable to toggle torch.');
+    function processScannedQR(data) {
+      // Stop scanner
+      stopScanner();
+      
+      // Add a small delay for UX
+      setTimeout(() => {
+        saveContact(data);
+        showContactsScreen();
+        alert('Contact added successfully!');
+      }, 500);
+    }
+
+    function updateScannerStatus(message, type) {
+      const statusEl = document.getElementById('scannerStatus');
+      statusEl.textContent = message;
+      statusEl.className = 'scanner-status';
+      
+      if (type) {
+        statusEl.classList.add(type);
       }
     }
 
-    /*******************************
-     * File upload fallback
-     *******************************/
-    function triggerFileUpload() { document.getElementById('qrFileInput').click(); }
-
-    function handleFileUpload(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        // draw onto a canvas and run jsQR
-        const c = document.createElement('canvas');
-        const size = Math.min(img.width, img.height, 1200);
-        c.width = size; c.height = size;
-        const ctx = c.getContext('2d');
-        // center crop
-        const sx = (img.width - size) / 2;
-        const sy = (img.height - size) / 2;
-        ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
-        try {
-          const data = ctx.getImageData(0, 0, c.width, c.height);
-          const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" });
-          if (code) {
-            try {
-              const parsed = JSON.parse(code.data.trim());
-              if (parsed.type === 'offer' && parsed.sdp && parsed.publicKey) {
-                saveContact(parsed);
-                showContactsScreen();
-                alert('Contact added from uploaded image!');
-                URL.revokeObjectURL(url);
-                return;
-              }
-            } catch (err) {}
-          }
-          alert('No valid QR found in the uploaded image.');
-        } catch (err) {
-          console.error('file scan error', err);
-          alert('Failed to scan image.');
-        } finally {
-          URL.revokeObjectURL(url);
-        }
-      };
-      img.onerror = () => { alert('Could not load image file.'); URL.revokeObjectURL(url); };
-      img.src = url;
-    }
-
-    /*******************************
-     * Contact management (encrypt / decrypt)
-     *******************************/
+    // Contact management
     function saveContact(offerData) {
-      if (!MASTER_PASSWORD) { alert('Password not set.'); return; }
+      if (!MASTER_PASSWORD) return;
+      
       try {
         const encrypted = encryptData(JSON.stringify(offerData), MASTER_PASSWORD);
         const contact = {
@@ -597,9 +846,9 @@
           data: encrypted,
           timestamp: new Date().toISOString()
         };
+        
         CONTACTS.push(contact);
         saveContactsToStorage();
-        alert('Contact added successfully!');
       } catch (e) {
         console.error('Error saving contact:', e);
         alert('Failed to save contact. Please try again.');
@@ -610,30 +859,31 @@
       if (!MASTER_PASSWORD) return;
       try {
         const encrypted = encryptData(JSON.stringify(CONTACTS), MASTER_PASSWORD);
-        localStorage.setItem('simple_chat_contacts', encrypted);
+        localStorage.setItem('pro_qr_chat_contacts', encrypted);
       } catch (e) {
         console.error('Error saving contacts:', e);
       }
     }
 
     function loadContacts() {
-      const encrypted = localStorage.getItem('simple_chat_contacts');
-      if (!encrypted || !MASTER_PASSWORD) { CONTACTS = []; renderContacts(); return; }
+      const encrypted = localStorage.getItem('pro_qr_chat_contacts');
+      if (!encrypted || !MASTER_PASSWORD) return;
+      
       try {
         const decrypted = decryptData(encrypted, MASTER_PASSWORD);
-        CONTACTS = JSON.parse(decrypted) || [];
+        CONTACTS = JSON.parse(decrypted);
         renderContacts();
       } catch (e) {
         console.error('Decrypt failed', e);
         CONTACTS = [];
-        renderContacts();
       }
     }
 
     function renderContacts() {
       const list = document.getElementById('contactsList');
       const noContacts = document.getElementById('noContacts');
-      if (!CONTACTS || CONTACTS.length === 0) {
+      
+      if (CONTACTS.length === 0) {
         noContacts.style.display = 'block';
         list.innerHTML = '';
       } else {
@@ -654,23 +904,23 @@
     }
 
     function deleteContact(id) {
-      if (!confirm('Delete this contact?')) return;
-      CONTACTS = CONTACTS.filter(c => c.id !== id);
-      saveContactsToStorage();
-      renderContacts();
+      if (confirm('Delete this contact?')) {
+        CONTACTS = CONTACTS.filter(c => c.id !== id);
+        saveContactsToStorage();
+        renderContacts();
+      }
     }
 
-    /*******************************
-     * Chat / WebRTC
-     *******************************/
+    // Chat functions
     async function startChat(contactId) {
       const contact = CONTACTS.find(c => c.id === contactId);
       if (!contact) return;
+      
       CURRENT_CONTACT = contact;
       document.getElementById('chatTitle').textContent = contact.name;
       document.getElementById('chatArea').innerHTML = '<div class="empty-state"><p>Connecting...</p></div>';
       showChatScreen();
-
+      
       try {
         const decrypted = decryptData(contact.data, MASTER_PASSWORD);
         const offerData = JSON.parse(decrypted);
@@ -683,95 +933,105 @@
     }
 
     async function connectToPeer(offerData) {
-      try {
-        const keyPair = nacl.box.keyPair();
-        window.MY_KEYPAIR = keyPair;
-
-        PEER_CONNECTION = new RTCPeerConnection({
-          iceServers: [TURN_SERVER]
-        });
-
-        PEER_CONNECTION.ondatachannel = (e) => {
-          DATA_CHANNEL = e.channel;
-          setupDataChannel();
-        };
-
-        const offer = new RTCSessionDescription({ type: 'offer', sdp: offerData.sdp });
-        await PEER_CONNECTION.setRemoteDescription(offer);
-
-        const answer = await PEER_CONNECTION.createAnswer();
-        await PEER_CONNECTION.setLocalDescription(answer);
-
-        updateStatus('Connecting...', 'offline');
-      } catch (e) {
-        console.error('connectToPeer error', e);
-        alert('Connection failed.');
-        closeChat();
-      }
+      const keyPair = nacl.box.keyPair();
+      window.MY_KEYPAIR = keyPair;
+      
+      PEER_CONNECTION = new RTCPeerConnection({ 
+        iceServers: [TURN_SERVER],
+        iceTransportPolicy: "relay"
+      });
+      
+      PEER_CONNECTION.ondatachannel = (e) => {
+        DATA_CHANNEL = e.channel;
+        setupDataChannel();
+      };
+      
+      const offer = new RTCSessionDescription({
+        type: 'offer',
+        sdp: offerData.sdp
+      });
+      
+      await PEER_CONNECTION.setRemoteDescription(offer);
+      
+      const answer = await PEER_CONNECTION.createAnswer();
+      await PEER_CONNECTION.setLocalDescription(answer);
+      
+      updateStatus('Connecting...', 'connecting');
     }
-
+    
     function setupDataChannel() {
-      if (!DATA_CHANNEL) return;
       DATA_CHANNEL.onopen = () => {
         updateStatus('Online', 'online');
         document.getElementById('messageInput').disabled = false;
         document.getElementById('messageInput').focus();
-        document.getElementById('sendBtn').disabled = false;
+        document.querySelector('#chatScreen button').disabled = false;
         document.getElementById('chatArea').innerHTML = '';
         addMessage('system', 'Connected! You can now chat securely.');
       };
-      DATA_CHANNEL.onmessage = (e) => addMessage('peer', e.data);
+      
+      DATA_CHANNEL.onmessage = (e) => {
+        addMessage('peer', e.data);
+      };
+      
       DATA_CHANNEL.onclose = () => {
         updateStatus('Offline', 'offline');
         addMessage('system', 'Connection lost.');
-        document.getElementById('messageInput').disabled = true;
-        document.getElementById('sendBtn').disabled = true;
       };
-      DATA_CHANNEL.onerror = (err) => console.warn('DataChannel error', err);
     }
-
+    
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const msg = input.value.trim();
       if (!msg || !DATA_CHANNEL) return;
+      
       input.value = '';
       addMessage('you', msg);
       if (DATA_CHANNEL && DATA_CHANNEL.readyState === 'open') {
         DATA_CHANNEL.send(msg);
       }
     }
-
+    
     function addMessage(sender, text) {
       const chatArea = document.getElementById('chatArea');
-      if (chatArea.querySelector('.empty-state')) chatArea.innerHTML = '';
-      const div = document.createElement('div');
-      div.className = `message ${sender}`;
-      div.textContent = text;
-      chatArea.appendChild(div);
+      
+      // Remove empty state if it exists
+      if (chatArea.querySelector('.empty-state')) {
+        chatArea.innerHTML = '';
+      }
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      const messageText = document.createElement('div');
+      messageText.textContent = text;
+      messageDiv.appendChild(messageText);
+      
+      const messageTime = document.createElement('div');
+      messageTime.className = 'message-time';
+      messageTime.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      messageDiv.appendChild(messageTime);
+      
+      chatArea.appendChild(messageDiv);
       chatArea.scrollTop = chatArea.scrollHeight;
     }
-
+    
     function updateStatus(text, className) {
       const status = document.getElementById('chatStatus');
       status.textContent = text;
       status.className = `status ${className}`;
     }
-
+    
     function closeChat() {
       if (PEER_CONNECTION) {
-        try { PEER_CONNECTION.close(); } catch(_) {}
+        PEER_CONNECTION.close();
         PEER_CONNECTION = null;
       }
       DATA_CHANNEL = null;
       CURRENT_CONTACT = null;
-      document.getElementById('messageInput').disabled = true;
-      document.getElementById('sendBtn').disabled = true;
       showContactsScreen();
     }
 
-    /*******************************
-     * Encryption utils (tweetnacl)
-     *******************************/
+    // Encryption utilities
     function deriveKey(password, salt) {
       const encoder = new TextEncoder();
       const passBytes = encoder.encode(password);
@@ -788,10 +1048,12 @@
       const key = deriveKey(password, salt);
       const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
       const encrypted = nacl.secretbox(plaintext, nonce, key);
+      
       const combined = new Uint8Array(salt.length + nonce.length + encrypted.length);
       combined.set(salt);
       combined.set(nonce, salt.length);
       combined.set(encrypted, salt.length + nonce.length);
+      
       return nacl.util.encodeBase64(combined);
     }
 
@@ -800,19 +1062,13 @@
       const salt = combined.slice(0, 32);
       const nonce = combined.slice(32, 32 + nacl.secretbox.nonceLength);
       const ciphertext = combined.slice(32 + nacl.secretbox.nonceLength);
+      
       const key = deriveKey(password, salt);
       const decrypted = nacl.secretbox.open(ciphertext, nonce, key);
+      
       if (!decrypted) throw new Error('Decryption failed');
       return new TextDecoder().decode(decrypted);
     }
-
-    /*******************************
-     * Clean up when leaving page
-     *******************************/
-    window.addEventListener('beforeunload', () => {
-      stopScanner();
-      if (PEER_CONNECTION) try { PEER_CONNECTION.close(); } catch(_) {}
-    });
   </script>
 </body>
 </html>
