@@ -77,7 +77,7 @@
           <div class="small" style="margin-top:6px">La paraphrase reste en session. Fermez l'onglet pour la supprimer.</div>
         </div>
         <div style="text-align:right">
-          <div class="small">Indice : 123456</div>
+          <div class="small">Indice : B L D I</div>
         </div>
       </div>
 
@@ -87,7 +87,7 @@
       </div>
       <div style="margin-top:12px;display:flex;gap:8px;">
         <button id="unlockBtn">Déverrouiller</button>
-        <button id="quickBtn" class="ghost">Démo</button>
+        <button id="quickBtn" class="ghost"></button>
       </div>
       <div class="dangerline"></div>
       <div class="disclaimer">Toutes les données affichées sont générées localement et sont fictives.</div>
@@ -109,9 +109,9 @@
       </div>
 
       <div class="list" id="listArea"></div>
-      <div class="pager" id="pagerArea"></div>
+      <div class="pager" id="pagerArea">Vérifiée</div>
       <footer>
-        <div class="small">Jeu de 5 000 entrées fictives — ouvert uniquement hors-ligne.</div>
+        <div class="small">entrées fictives — Accès réservé au personnel autorisé.</div>
       </footer>
     </div>
 
@@ -142,7 +142,7 @@
                   <input id="juridPwd" type="password" placeholder="Mot de passe juridique..." />
                   <button id="unlockProofBtn" class="ghost">Valider</button>
                 </div>
-                <div style="margin-top:8px" class="small">Si nécessaire, consultez la liste (démo) : <button id="showPwdList" class="ghost">liste juridique</button></div>
+                <div style="margin-top:8px" class="small">Si nécessaire, consultez la liste : <button id="showPwdList" class="ghost">liste juridique</button></div>
               </div>
             </div>
           </div>
@@ -161,8 +161,8 @@
     <!-- Modal mots de passe juridiques -->
     <div id="pwdListModal" class="modal" style="display:none">
       <div class="modal-card">
-        <h3>Mots de passe juridiques (démo)</h3>
-        <p class="small">Mots de passe fictifs fournis uniquement pour la démo.</p>
+        <h3>Mots de passe juridiques </h3>
+        <p class="small">Mots de passe fictifs fournis uniquement pour les personnel autorisé</p>
         <ul id="pwdList"></ul>
         <div style="margin-top:12px;text-align:right">
           <button id="closePwdList" class="ghost">Fermer</button>
@@ -191,9 +191,9 @@ function seededRandom(seed){
 }
 
 /* listes de prénoms, noms, villes (inspirés algériens mais fictifs) */
-const FIRST = ["Ahmed","Yacine","Karim","Sami","Amina","Nadia","Rachid","Leila","Souad","Farid","Zineb","Walid","Meriem","Sofiane","Samir","Hanen","Nabil","Imane","Youssef","Mounia","Nacer","Fatiha","Oussama","Rima","Zakia","Hichem","Djamila","Fares","Khadija"];
-const LAST = ["Benali","Benzema","Bouazza","Benaissa","Cherif","Khatib","Meziane","Gueroua","Aitouche","Bellal","Nasri","Boufadel","Ramdane","Habib","Mansouri","Slimani","Ould","Boudiaf","Saadi","Farhat"];
-const CITIES = ["Alger","Oran","Constantine","Annaba","Blida","Setif","Bejaia","Tizi Ouzou","Skikda","Boumerdes","Mostaganem","Jijel","Ghardaia","Tipaza","El Oued","Laghouat"];
+const FIRST = ["Ahmed","Yacine","Karim","Sami","Amina","Nadia","Rachid","Leila","Souad","Farid","Zineb","Walid","Meriem","Sofiane","Samir","Hanen","Abd Errahman","Nabil","Imane","Moussa","Said","Md Ghali","Youssef","Mounia","Nacer","Fatiha","Oussama","Rima","Zakia","Hichem","Djamila","Fares","Khaled","Khadija"];
+const LAST = ["Benali","Benzema","Bouazza","Benaissa","Cherif","Khatib","Meziane","Gueroua","Aitouche","Bellal","Nasri","Boufadel","Ramdane","Habib","Mansouri","Slimani","Ould","Boudiaf","Saadi","Farhat","Saidi","Belkacem","Zali","Nouri","Bourai","Belkacemi","Rehmi","Sidouni","Abbas","Belouti","Menfour","Ghaleb"];
+const CITIES = ["Alger","Oran","Constantine","Annaba","Blida","Setif","Bejaia","Tizi Ouzou","Skikda","Boumerdès"];rdes","Mostaganem","Jijel","Ghardaia","Tipaza","El Oued","Laghouat","Bouira","Boume
 
 /* génère 5000 profils fictifs */
 const TOTAL = 5000;
