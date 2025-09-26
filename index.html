@@ -2,181 +2,374 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Secret Chat</title>
-  <!-- FIXED: Removed trailing spaces in URLs -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Secret Chat</title>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: #f5f7fa; color: #333; padding: 16px; max-width: 500px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; }
-    .screen { display: none; flex: 1; flex-direction: column; }
-    .active { display: flex !important; }
-    h1 { text-align: center; margin: 16px 0; color: #2c3e50; font-size: 24px; }
-    input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-    button { background: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; }
-    button:hover { background: #2980b9; }
-    .btn-secondary { background: #95a5a6; }
-    .btn-danger { background: #e74c3c; }
-    .contact-item { 
-      background: white; 
-      padding: 12px; 
-      margin: 8px 0; 
-      border-radius: 8px; 
-      display: flex; 
-      justify-content: space-between; 
+    /* Modern Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
     }
-    .status { 
-      font-size: 12px; 
-      padding: 4px 8px; 
-      border-radius: 12px; 
-      color: white;
-    }
-    .online { background: #2ecc71; }
-    .offline { background: #95a5a6; }
-    .actions button { 
-      padding: 4px 8px; 
-      font-size: 12px; 
-      margin-left: 4px;
-    }
-    #chatArea { 
-      flex: 1; 
-      background: white; 
-      padding: 12px; 
-      margin: 12px 0; 
-      border-radius: 8px; 
-      overflow-y: auto; 
-      display: none;
-    }
-    .message { 
-      padding: 8px 0; 
-      word-wrap: break-word; 
-    }
-    .you { color: #3498db; }
-    .peer { color: #2ecc71; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .header-buttons { display: flex; gap: 8px; }
-    .back-btn { background: none; border: none; font-size: 18px; color: #3498db; }
-    .instructions { 
-      text-align: center; 
-      font-size: 13px; 
-      color: #7f8c8d; 
-      margin: 12px 0; 
-      line-height: 1.4;
-    }
-    #qrReader {
-      position: relative;
+    
+    .app-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       width: 100%;
-      height: 300px;
-      background: #000;
-      margin: 10px 0;
-      border-radius: 8px;
+      max-width: 400px;
       overflow: hidden;
     }
+    
+    .screen {
+      display: none;
+      padding: 30px;
+      flex-direction: column;
+      min-height: 500px;
+    }
+    
+    .active {
+      display: flex;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #4a5568;
+      font-weight: 600;
+    }
+    
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #4a5568;
+      font-weight: 500;
+      font-size: 1.3rem;
+    }
+    
+    .logo {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    
+    .description {
+      text-align: center;
+      color: #718096;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    
+    input, button {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    
+    input {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    button {
+      background: #667eea;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    button:hover {
+      background: #5a6fd8;
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: #a0aec0;
+    }
+    
+    .btn-secondary:hover {
+      background: #90a0b3;
+    }
+    
+    .btn-danger {
+      background: #e53e3e;
+    }
+    
+    .btn-danger:hover {
+      background: #c53030;
+    }
+    
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 14px;
+      width: auto;
+    }
+    
+    .qr-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    #myQr {
+      display: inline-block;
+      padding: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    #qrReader {
+      width: 100%;
+      height: 250px;
+      background: #2d3748;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 20px 0;
+      position: relative;
+    }
+    
     #qrGuide {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 200px;
-      height: 200px;
-      border: 2px solid #2ecc71;
-      border-radius: 12px;
+      width: 180px;
+      height: 180px;
+      border: 2px solid #48bb78;
+      border-radius: 10px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
     }
-    #qrGuide::before {
-      content: "↑ Place QR here ↑";
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
+    
+    .contact-list {
+      margin-top: 20px;
+    }
+    
+    .contact-item {
+      background: #f7fafc;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .contact-info {
+      flex: 1;
+    }
+    
+    .contact-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .contact-time {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .contact-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .chat-area {
+      flex: 1;
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 20px 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .message {
+      padding: 10px 14px;
+      border-radius: 18px;
+      margin-bottom: 12px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    
+    .message.you {
+      background: #667eea;
       color: white;
-      font-size: 14px;
-      font-weight: bold;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.peer {
+      background: #e2e8f0;
+      color: #2d3748;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .message-input-container {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .message-input-container input {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    .message-input-container button {
+      width: auto;
+      margin-bottom: 0;
+      padding: 14px 20px;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    
+    .status.online {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .status.offline {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .nav-buttons button {
+      width: 48%;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #718096;
+    }
+    
+    .empty-state p {
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
-  <!-- Password Screen -->
-  <div id="passwordScreen" class="screen active">
-    <h1>🔒 Secret Chat v552</h1>
-    <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
-    <button onclick="setPassword()">Enter</button>
-    <p style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 14px;">
-      Your password encrypts all contact data. No recovery if forgotten!
-    </p>
-  </div>
+  <div class="app-container">
+    <!-- Password Screen -->
+    <div id="passwordScreen" class="screen active">
+      <div class="logo">🔒</div>
+      <h1>Simple Secret Chat</h1>
+      <p class="description">Set a password to encrypt your chat data</p>
+      <input type="password" id="passwordInput" placeholder="Enter your password">
+      <button onclick="setPassword()">Continue</button>
+    </div>
 
-  <!-- Main Screen -->
-  <div id="mainScreen" class="screen">
-    <div class="header">
-      <h1>Secret Chat</h1>
-      <div class="header-buttons">
-        <button class="btn-secondary" onclick="showQrGenerator()" title="Generate your QR">➕</button>
-        <button class="btn-secondary" onclick="showQrScanner()" title="Scan friend's QR">📱</button>
+    <!-- Contacts Screen -->
+    <div id="contactsScreen" class="screen">
+      <h1>Contacts</h1>
+      <p class="description">Add contacts by scanning their QR codes</p>
+      
+      <div class="nav-buttons">
+        <button class="btn-secondary" onclick="showQrGenerator()">My QR Code</button>
+        <button onclick="showQrScanner()">Scan QR Code</button>
+      </div>
+      
+      <div class="contact-list" id="contactsList">
+        <!-- Contacts will be loaded here -->
+      </div>
+      
+      <div id="noContacts" class="empty-state">
+        <p>No contacts yet</p>
+        <p>Scan a QR code to add your first contact</p>
       </div>
     </div>
-    
-    <div class="instructions">
-      👉 One person taps <strong>"➕ Generate"</strong><br>
-      👉 The other taps <strong>"📱 Scan"</strong> and scans the QR
-    </div>
-    
-    <div id="contactsList">
-      <!-- Contacts loaded here -->
-    </div>
-    
-    <div id="noContacts" style="text-align: center; padding: 20px; color: #7f8c8d;">
-      <p>No contacts yet</p>
-      <button class="btn-secondary" onclick="showQrGenerator()" style="margin: 8px 0; padding: 10px;">➕ Generate My QR</button>
-      <br>
-      <button class="btn-secondary" onclick="showQrScanner()" style="margin: 8px 0; padding: 10px;">📱 Scan Friend's QR</button>
-    </div>
-  </div>
 
-  <!-- QR Generator -->
-  <div id="qrGeneratorScreen" class="screen">
-    <div class="header">
-      <button class="back-btn" onclick="showMainScreen()">&larr;</button>
+    <!-- QR Generator Screen -->
+    <div id="qrGeneratorScreen" class="screen">
       <h1>My QR Code</h1>
+      <p class="description">Share this code with others to connect</p>
+      
+      <div class="qr-container">
+        <div id="myQr"></div>
+      </div>
+      
+      <button class="btn-secondary" onclick="copyQrData()">Copy QR Data</button>
+      <button onclick="showContactsScreen()">Back to Contacts</button>
     </div>
-    <div id="myQr" style="text-align: center; padding: 20px;"></div>
-    <p style="text-align: center; margin: 10px 0; color: #7f8c8d;">
-      Share this QR with your friend
-    </p>
-  </div>
 
-  <!-- QR Scanner -->
-  <div id="qrScannerScreen" class="screen">
-    <div class="header">
-      <button class="back-btn" onclick="showMainScreen()">&larr;</button>
-      <h1>Scan QR</h1>
+    <!-- QR Scanner Screen -->
+    <div id="qrScannerScreen" class="screen">
+      <h1>Scan QR Code</h1>
+      <p class="description">Point your camera at a QR code</p>
+      
+      <div id="qrReader">
+        <div id="qrGuide"></div>
+      </div>
+      
+      <button onclick="startScanner()">Start Camera</button>
+      <button class="btn-secondary" onclick="showContactsScreen()">Cancel</button>
     </div>
-    <div id="qrReader">
-      <!-- Camera video will appear here -->
-      <div id="qrGuide"></div>
-    </div>
-    <button class="btn-secondary" onclick="startScanner()" style="margin-top: 10px;">Start Camera</button>
-    <p style="text-align: center; margin-top: 10px; font-size: 13px; color: #7f8c8d;">
-      Point your camera at your friend's QR code
-    </p>
-  </div>
 
-  <!-- Chat Screen -->
-  <div id="chatScreen" class="screen">
-    <div class="header">
-      <button class="back-btn" onclick="closeChat()">&larr;</button>
-      <h1 id="chatTitle">Chat</h1>
-      <div id="chatStatus" class="status offline">Offline</div>
+    <!-- Chat Screen -->
+    <div id="chatScreen" class="screen">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 id="chatTitle">Chat</h2>
+        <span id="chatStatus" class="status offline">Offline</span>
+      </div>
+      
+      <div class="chat-area" id="chatArea">
+        <div class="empty-state">
+          <p>No messages yet</p>
+          <p>Start a conversation!</p>
+        </div>
+      </div>
+      
+      <div class="message-input-container">
+        <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+        <button onclick="sendMessage()" disabled>Send</button>
+      </div>
+      
+      <button class="btn-secondary" onclick="closeChat()">Back to Contacts</button>
     </div>
-    <div id="chatArea"></div>
-    <input type="text" id="messageInput" placeholder="Type a message..." disabled>
-    <button onclick="sendMessage()" disabled>Send</button>
   </div>
 
   <script>
@@ -188,6 +381,7 @@
     let CONTACTS = [];
     let video = null;
     let scanActive = false;
+    let currentQrData = null;
     
     // TURN server
     const TURN_SERVER = {
@@ -196,51 +390,75 @@
       credential: "free"
     };
 
+    // Initialize app
     document.addEventListener('DOMContentLoaded', () => {
+      // Check if we already have a password set
+      const savedPassword = localStorage.getItem('simple_chat_password');
+      if (savedPassword) {
+        MASTER_PASSWORD = savedPassword;
+        showContactsScreen();
+      }
+      
       loadContacts();
     });
 
-    async function setPassword() {
+    // Password functions
+    function setPassword() {
       const pwd = document.getElementById('passwordInput').value;
-      if (!pwd) return alert('Please enter a password');
+      if (!pwd) {
+        alert('Please enter a password');
+        return;
+      }
+      
       MASTER_PASSWORD = pwd;
+      localStorage.setItem('simple_chat_password', pwd);
       document.getElementById('passwordInput').value = '';
-      showMainScreen();
+      showContactsScreen();
     }
 
-    function showMainScreen() {
-      document.getElementById('mainScreen').classList.add('active');
-      document.getElementById('qrGeneratorScreen').classList.remove('active');
-      document.getElementById('qrScannerScreen').classList.remove('active');
-      document.getElementById('chatScreen').classList.remove('active');
+    // Screen navigation
+    function showContactsScreen() {
+      hideAllScreens();
+      document.getElementById('contactsScreen').classList.add('active');
       renderContacts();
     }
 
     function showQrGenerator() {
-      generateMyQr();
-      document.getElementById('mainScreen').classList.remove('active');
+      hideAllScreens();
       document.getElementById('qrGeneratorScreen').classList.add('active');
+      generateMyQr();
     }
 
     function showQrScanner() {
-      document.getElementById('mainScreen').classList.remove('active');
+      hideAllScreens();
       document.getElementById('qrScannerScreen').classList.add('active');
     }
 
-    // OPTIMIZED: Remove unnecessary ICE candidates for smaller QR
+    function showChatScreen() {
+      hideAllScreens();
+      document.getElementById('chatScreen').classList.add('active');
+    }
+
+    function hideAllScreens() {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+      });
+    }
+
+    // QR Code functions
     function generateMyQr() {
       try {
         const keyPair = nacl.box.keyPair();
         window.MY_KEYPAIR = keyPair;
         
         const pc = new RTCPeerConnection({ iceServers: [TURN_SERVER] });
-        pc.createDataChannel('secret-chat');
+        pc.createDataChannel('simple-chat');
         
         pc.onicecandidate = (e) => {
           if (e.candidate) return;
-          let offer = pc.localDescription.sdp;
           
-          // ✅ REMOVE local candidates to shrink QR size
+          let offer = pc.localDescription.sdp;
+          // Remove local candidates to reduce QR size
           offer = offer.replace(/a=candidate:.*\r\n/g, '');
           offer = offer.replace(/.*\.local.*\r\n/g, '');
           
@@ -250,8 +468,14 @@
             publicKey: nacl.util.encodeBase64(keyPair.publicKey)
           });
           
+          currentQrData = qrData;
           document.getElementById('myQr').innerHTML = '';
-          new QRCode(document.getElementById('myQr'), qrData);
+          new QRCode(document.getElementById('myQr'), {
+            text: qrData,
+            width: 200,
+            height: 200
+          });
+          
           pc.close();
         };
         
@@ -262,10 +486,34 @@
       }
     }
 
+    function copyQrData() {
+      if (!currentQrData) {
+        alert('No QR data available');
+        return;
+      }
+      
+      navigator.clipboard.writeText(currentQrData)
+        .then(() => {
+          alert('QR data copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = currentQrData;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          alert('QR data copied to clipboard!');
+        });
+    }
+
+    // QR Scanner functions
     async function startScanner() {
       const qrReader = document.getElementById('qrReader');
       qrReader.innerHTML = `
-        <video playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+        <video playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;"></video>
         <div id="qrGuide"></div>
       `;
       video = qrReader.querySelector('video');
@@ -276,11 +524,10 @@
         });
         video.srcObject = stream;
         
-        // Start continuous scanning
         scanActive = true;
         requestAnimationFrame(tick);
       } catch (err) {
-        alert('Camera access denied: ' + err.message + '\n\nPlease allow camera permission and try again.');
+        alert('Camera access denied. Please allow camera permission and try again.');
       }
     }
 
@@ -306,13 +553,12 @@
           try {
             const data = JSON.parse(code.data.trim());
             if (data.type === 'offer' && data.sdp && data.publicKey) {
-              // Stop scanning
               scanActive = false;
               if (video.srcObject) {
                 video.srcObject.getTracks().forEach(track => track.stop());
               }
               saveContact(data);
-              showMainScreen();
+              showContactsScreen();
               return;
             }
           } catch (e) {
@@ -323,13 +569,201 @@
         console.error("Scanning error:", e);
       }
 
-      // Keep scanning
       if (scanActive) {
         requestAnimationFrame(tick);
       }
     }
 
-    // ... (rest of your encryption/contact functions remain unchanged)
+    // Contact management
+    function saveContact(offerData) {
+      if (!MASTER_PASSWORD) return;
+      
+      try {
+        const encrypted = encryptData(JSON.stringify(offerData), MASTER_PASSWORD);
+        const contact = {
+          id: Date.now().toString(),
+          name: 'Contact ' + (CONTACTS.length + 1),
+          data: encrypted,
+          timestamp: new Date().toISOString()
+        };
+        
+        CONTACTS.push(contact);
+        saveContactsToStorage();
+        alert('Contact added successfully!');
+      } catch (e) {
+        console.error('Error saving contact:', e);
+        alert('Failed to save contact. Please try again.');
+      }
+    }
+
+    function saveContactsToStorage() {
+      if (!MASTER_PASSWORD) return;
+      try {
+        const encrypted = encryptData(JSON.stringify(CONTACTS), MASTER_PASSWORD);
+        localStorage.setItem('simple_chat_contacts', encrypted);
+      } catch (e) {
+        console.error('Error saving contacts:', e);
+      }
+    }
+
+    function loadContacts() {
+      const encrypted = localStorage.getItem('simple_chat_contacts');
+      if (!encrypted || !MASTER_PASSWORD) return;
+      
+      try {
+        const decrypted = decryptData(encrypted, MASTER_PASSWORD);
+        CONTACTS = JSON.parse(decrypted);
+        renderContacts();
+      } catch (e) {
+        console.error('Decrypt failed', e);
+        CONTACTS = [];
+      }
+    }
+
+    function renderContacts() {
+      const list = document.getElementById('contactsList');
+      const noContacts = document.getElementById('noContacts');
+      
+      if (CONTACTS.length === 0) {
+        noContacts.style.display = 'block';
+        list.innerHTML = '';
+      } else {
+        noContacts.style.display = 'none';
+        list.innerHTML = CONTACTS.map(contact => `
+          <div class="contact-item">
+            <div class="contact-info">
+              <div class="contact-name">${contact.name}</div>
+              <div class="contact-time">${new Date(contact.timestamp).toLocaleString()}</div>
+            </div>
+            <div class="contact-actions">
+              <button class="btn-small" onclick="startChat('${contact.id}')">Chat</button>
+              <button class="btn-small btn-danger" onclick="deleteContact('${contact.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function deleteContact(id) {
+      if (confirm('Delete this contact?')) {
+        CONTACTS = CONTACTS.filter(c => c.id !== id);
+        saveContactsToStorage();
+        renderContacts();
+      }
+    }
+
+    // Chat functions
+    async function startChat(contactId) {
+      const contact = CONTACTS.find(c => c.id === contactId);
+      if (!contact) return;
+      
+      CURRENT_CONTACT = contact;
+      document.getElementById('chatTitle').textContent = contact.name;
+      document.getElementById('chatArea').innerHTML = '<div class="empty-state"><p>Connecting...</p></div>';
+      showChatScreen();
+      
+      try {
+        const decrypted = decryptData(contact.data, MASTER_PASSWORD);
+        const offerData = JSON.parse(decrypted);
+        await connectToPeer(offerData);
+      } catch (e) {
+        console.error('Failed to decrypt contact data:', e);
+        alert('Failed to connect to contact');
+        closeChat();
+      }
+    }
+
+    async function connectToPeer(offerData) {
+      const keyPair = nacl.box.keyPair();
+      window.MY_KEYPAIR = keyPair;
+      
+      PEER_CONNECTION = new RTCPeerConnection({ 
+        iceServers: [TURN_SERVER],
+        iceTransportPolicy: "relay"
+      });
+      
+      PEER_CONNECTION.ondatachannel = (e) => {
+        DATA_CHANNEL = e.channel;
+        setupDataChannel();
+      };
+      
+      const offer = new RTCSessionDescription({
+        type: 'offer',
+        sdp: offerData.sdp
+      });
+      
+      await PEER_CONNECTION.setRemoteDescription(offer);
+      
+      const answer = await PEER_CONNECTION.createAnswer();
+      await PEER_CONNECTION.setLocalDescription(answer);
+      
+      updateStatus('Connecting...', 'offline');
+    }
+    
+    function setupDataChannel() {
+      DATA_CHANNEL.onopen = () => {
+        updateStatus('Online', 'online');
+        document.getElementById('messageInput').disabled = false;
+        document.getElementById('messageInput').focus();
+        document.querySelector('#chatScreen button').disabled = false;
+        document.getElementById('chatArea').innerHTML = '';
+        addMessage('system', 'Connected! You can now chat securely.');
+      };
+      
+      DATA_CHANNEL.onmessage = (e) => {
+        addMessage('peer', e.data);
+      };
+      
+      DATA_CHANNEL.onclose = () => {
+        updateStatus('Offline', 'offline');
+        addMessage('system', 'Connection lost.');
+      };
+    }
+    
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const msg = input.value.trim();
+      if (!msg || !DATA_CHANNEL) return;
+      
+      input.value = '';
+      addMessage('you', msg);
+      if (DATA_CHANNEL && DATA_CHANNEL.readyState === 'open') {
+        DATA_CHANNEL.send(msg);
+      }
+    }
+    
+    function addMessage(sender, text) {
+      const chatArea = document.getElementById('chatArea');
+      
+      // Remove empty state if it exists
+      if (chatArea.querySelector('.empty-state')) {
+        chatArea.innerHTML = '';
+      }
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      messageDiv.textContent = text;
+      chatArea.appendChild(messageDiv);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    
+    function updateStatus(text, className) {
+      const status = document.getElementById('chatStatus');
+      status.textContent = text;
+      status.className = `status ${className}`;
+    }
+    
+    function closeChat() {
+      if (PEER_CONNECTION) {
+        PEER_CONNECTION.close();
+        PEER_CONNECTION = null;
+      }
+      DATA_CHANNEL = null;
+      CURRENT_CONTACT = null;
+      showContactsScreen();
+    }
+
+    // Encryption utilities
     function deriveKey(password, salt) {
       const encoder = new TextEncoder();
       const passBytes = encoder.encode(password);
@@ -366,184 +800,6 @@
       
       if (!decrypted) throw new Error('Decryption failed');
       return new TextDecoder().decode(decrypted);
-    }
-
-    async function saveContact(offerData) {
-      if (!MASTER_PASSWORD) return;
-      
-      try {
-        const data = encryptData(JSON.stringify(offerData), MASTER_PASSWORD);
-        const contact = {
-          id: Date.now().toString(),
-          name: 'Contact ' + (CONTACTS.length + 1),
-           encrypted,
-          timestamp: new Date().toISOString()
-        };
-        
-        CONTACTS.push(contact);
-        saveContactsToStorage();
-        alert('✅ Contact added successfully!');
-      } catch (e) {
-        console.error('Error saving contact:', e);
-        alert('Failed to save contact. Please try again.');
-      }
-    }
-
-    function saveContactsToStorage() {
-      if (!MASTER_PASSWORD) return;
-      try {
-        const encrypted = encryptData(JSON.stringify(CONTACTS), MASTER_PASSWORD);
-        localStorage.setItem('secure_chat_contacts', encrypted);
-      } catch (e) {
-        console.error('Error saving contacts:', e);
-      }
-    }
-
-    function loadContacts() {
-      const encrypted = localStorage.getItem('secure_chat_contacts');
-      if (!encrypted || !MASTER_PASSWORD) return;
-      
-      try {
-        const decrypted = decryptData(encrypted, MASTER_PASSWORD);
-        CONTACTS = JSON.parse(decrypted);
-        renderContacts();
-      } catch (e) {
-        console.error('Decrypt failed', e);
-        alert('Invalid password or corrupted data');
-        CONTACTS = [];
-      }
-    }
-
-    function renderContacts() {
-      const list = document.getElementById('contactsList');
-      const noContacts = document.getElementById('noContacts');
-      
-      if (CONTACTS.length === 0) {
-        noContacts.style.display = 'block';
-        list.innerHTML = '';
-      } else {
-        noContacts.style.display = 'none';
-        list.innerHTML = CONTACTS.map(contact => `
-          <div class="contact-item">
-            <div>
-              <div>${contact.name}</div>
-              <div style="font-size:12px;color:#7f8c8d;">${new Date(contact.timestamp).toLocaleString()}</div>
-            </div>
-            <div class="actions">
-              <span class="status offline">Offline</span>
-              <button onclick="startChat('${contact.id}')">Chat</button>
-              <button class="btn-danger" onclick="deleteContact('${contact.id}')">✕</button>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    function deleteContact(id) {
-      if (confirm('Delete this contact?')) {
-        CONTACTS = CONTACTS.filter(c => c.id !== id);
-        saveContactsToStorage();
-        renderContacts();
-      }
-    }
-
-    async function startChat(contactId) {
-      const contact = CONTACTS.find(c => c.id === contactId);
-      if (!contact) return;
-      
-      CURRENT_CONTACT = contact;
-      document.getElementById('chatTitle').innerText = contact.name;
-      document.getElementById('mainScreen').classList.remove('active');
-      document.getElementById('chatScreen').classList.add('active');
-      
-      try {
-        const decrypted = decryptData(contact.data, MASTER_PASSWORD);
-        const offerData = JSON.parse(decrypted);
-        connectToPeer(offerData);
-      } catch (e) {
-        alert('Failed to decrypt contact data');
-        closeChat();
-      }
-    }
-
-    async function connectToPeer(offerData) {
-      const keyPair = nacl.box.keyPair();
-      window.MY_KEYPAIR = keyPair;
-      
-      PEER_CONNECTION = new RTCPeerConnection({ 
-        iceServers: [TURN_SERVER],
-        iceTransportPolicy: "relay"
-      });
-      
-      PEER_CONNECTION.ondatachannel = (e) => {
-        DATA_CHANNEL = e.channel;
-        setupDataChannel();
-      };
-      
-      const offer = new RTCSessionDescription(offerData);
-      await PEER_CONNECTION.setRemoteDescription(offer);
-      
-      const answer = await PEER_CONNECTION.createAnswer();
-      await PEER_CONNECTION.setLocalDescription(answer);
-      
-      updateStatus('Connecting...');
-    }
-    
-    function setupDataChannel() {
-      DATA_CHANNEL.onopen = () => {
-        updateStatus('Online', 'online');
-        document.getElementById('messageInput').disabled = false;
-        document.getElementById('messageInput').focus();
-        document.querySelector('#chatScreen button').disabled = false;
-      };
-      
-      DATA_CHANNEL.onmessage = (e) => {
-        addMessage('peer', 'Message received');
-      };
-      
-      DATA_CHANNEL.onclose = () => {
-        updateStatus('Offline', 'offline');
-      };
-    }
-    
-    function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const msg = input.value.trim();
-      if (!msg || !DATA_CHANNEL) return;
-      
-      input.value = '';
-      addMessage('you', msg);
-      if (DATA_CHANNEL && DATA_CHANNEL.readyState === 'open') {
-        DATA_CHANNEL.send(msg);
-      }
-    }
-    
-    function addMessage(sender, text) {
-      const chatArea = document.getElementById('chatArea');
-      chatArea.style.display = 'block';
-      const div = document.createElement('div');
-      div.className = `message ${sender}`;
-      div.innerText = text;
-      chatArea.appendChild(div);
-      chatArea.scrollTop = chatArea.scrollHeight;
-    }
-    
-    function updateStatus(text, className = 'offline') {
-      const status = document.getElementById('chatStatus');
-      status.innerText = text;
-      status.className = `status ${className}`;
-    }
-    
-    function closeChat() {
-      if (PEER_CONNECTION) {
-        PEER_CONNECTION.close();
-        PEER_CONNECTION = null;
-      }
-      DATA_CHANNEL = null;
-      CURRENT_CONTACT = null;
-      document.getElementById('chatArea').innerHTML = '';
-      document.getElementById('chatArea').style.display = 'none';
-      showMainScreen();
     }
   </script>
 </body>
