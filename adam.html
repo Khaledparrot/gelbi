@@ -1,109 +1,152 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Directory Demo (Fictional Data Only)</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CASEFILE - Secure Directory (Demo)</title>
 <style>
-  body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#f4f6f8;color:#111}
-  .wrap{max-width:1000px;margin:24px auto;padding:18px;background:white;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-  h1{margin:0 0 12px;font-size:20px}
-  .center{text-align:center}
-  .row{display:flex;gap:8px;align-items:center}
-  input[type="text"], input[type="password"]{flex:1;padding:8px;border:1px solid #ccd; border-radius:6px}
-  button{padding:8px 12px;border-radius:6px;border:0;background:#1976d2;color:white;cursor:pointer}
-  button.secondary{background:#6c757d}
-  .controls{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
-  .list{margin-top:12px;border-top:1px solid #eef;padding-top:12px}
-  .item{display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px dashed #eee}
-  .thumb{width:56px;height:56px;border-radius:6px;object-fit:cover;background:#ddd}
-  .meta{flex:1}
-  .meta h3{margin:0;font-size:16px}
-  .meta p{margin:4px 0 0;color:#666;font-size:13px}
-  .right{width:120px;text-align:right}
-  .pager{display:flex;gap:8px;justify-content:center;margin:12px 0}
-  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:20px}
-  .card{background:white;padding:16px;border-radius:10px;max-width:720px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.2)}
-  .images{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-  .images img{width:120px;height:80px;object-fit:cover;border-radius:6px}
-  .small{font-size:13px;color:#555}
-  .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef;color:#123;font-size:12px;margin-right:4px}
-  .note{font-size:13px;color:#b00}
-  .footer{font-size:13px;color:#666;margin-top:12px}
+  :root{
+    --bg:#071019; --card:#0b1720; --muted:#9fb0bf; --accent:#d32f2f; --glow: rgba(211,47,47,0.12);
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:
+    radial-gradient(circle at 10% 10%, rgba(211,47,47,0.04), transparent 10%),
+    linear-gradient(180deg,#041018 0%, #071019 100%); color:#e6f3f7}
+  .wrap{max-width:1100px;margin:28px auto;padding:18px}
+  header{display:flex;align-items:center;gap:14px;padding:16px;border-radius:10px;background:linear-gradient(90deg, rgba(211,47,47,0.08), transparent);box-shadow:0 8px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02)}
+  .logo{width:56px;height:56px;border-radius:8px;background:linear-gradient(180deg,#2b2b2b,#111);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:18px;box-shadow:0 2px 8px var(--glow)}
+  h1{margin:0;font-size:20px;letter-spacing:1px}
+  .subtitle{color:var(--muted);font-size:13px}
+  .alert{margin-left:auto;padding:6px 10px;border-radius:8px;background:rgba(211,47,47,0.12);color:var(--accent);font-weight:700;border:1px solid rgba(211,47,47,0.18)}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;margin-top:18px;border:1px solid rgba(255,255,255,0.03);box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+  /* Password screen */
+  .pw-box{max-width:460px;margin:26px auto;padding:18px;border-radius:10px;background:var(--card);box-shadow:0 8px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02)}
+  label{display:block;margin-bottom:8px;color:var(--muted);font-size:13px}
+  input[type="password"], input[type="text"]{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:15px;box-shadow: inset 0 1px 0 rgba(255,255,255,0.01)}
+  button{background:var(--accent);color:white;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+  /* Controls */
+  .controls{display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap}
+  .search{flex:1;display:flex;gap:8px}
+  .search input{flex:1}
+  .stats{color:var(--muted);font-size:13px}
+  /* list */
+  .list{margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+  .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px dashed rgba(255,255,255,0.02);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+  .row:hover{background:linear-gradient(90deg, rgba(211,47,47,0.03), transparent)}
+  .avatar{width:72px;height:54px;border-radius:6px;background:#0a1b26;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;border:1px solid rgba(255,255,255,0.02)}
+  .info{flex:1}
+  .title{font-weight:800;font-size:15px;margin-bottom:4px}
+  .meta{color:var(--muted);font-size:13px}
+  .badge{background:var(--glass);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.02);font-weight:700;color:var(--accent)}
+  .pager{display:flex;gap:8px;justify-content:center;padding:12px}
+  .small{font-size:13px;color:var(--muted)}
+  /* modal */
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,8,0.6);z-index:60}
+  .modal-card{background:#071417;padding:18px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);max-width:880px;width:94%;color:#eaf6f9;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+  .modal-head{display:flex;align-items:center;gap:14px}
+  .modal-head img{width:120px;height:86px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.03)}
+  .modal-body{display:flex;gap:18px;margin-top:12px}
+  .col{flex:1}
+  .note{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.01);color:var(--muted)}
+  /* decorative */
+  .typewriter{font-family:monospace;color:#ff6b6b;letter-spacing:1px}
+  .dangerline{height:6px;background:linear-gradient(90deg, rgba(211,47,47,0.9), rgba(255,255,255,0));border-radius:4px;margin-top:8px}
+  footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+  @media(max-width:700px){
+    .modal-body{flex-direction:column}
+    .avatar{width:56px}
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Secure Directory — Demo (Fictional data only)</h1>
-
-    <!-- Password screen -->
-    <div id="passwordScreen">
-      <p>This demo requires a password to view the directory (demo only).</p>
-      <div class="row">
-        <input id="passwordInput" type="password" placeholder="Enter password (demo: demo-pass)" />
-        <button id="pwBtn">Unlock</button>
+    <header>
+      <div class="logo">CASE</div>
+      <div>
+        <h1>CASEFILE — Secure Directory (DEMO)</h1>
+        <div class="subtitle">Classified view • For lawful testing & jokes with fictional data only</div>
       </div>
-      <p class="small">Password is stored only in session (cleared when you close the tab).</p>
+      <div class="alert">RESTRICTED</div>
+    </header>
+
+    <!-- Password box -->
+    <div id="pwBox" class="pw-box card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-weight:800">Enter Access Passcode</div>
+          <div class="small" style="margin-top:6px">This demo uses a session-only passcode. Close the tab to forget it.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="typewriter" id="typeLine">ACCESS REQUIRED</div>
+          <div style="margin-top:6px" class="small">Hint: demo passcode = <strong>123456</strong></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label for="pw">Passcode</label>
+        <input id="pw" type="password" placeholder="Enter passcode" />
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button id="unlockBtn">Unlock</button>
+        <button id="demoBtn" class="ghost">Demo (auto)</button>
+      </div>
+      <div class="dangerline"></div>
+      <p class="small" style="margin-top:10px">Warning: This page uses **only fictional** names and identifiers generated locally. Do not upload real personal data.</p>
     </div>
 
-    <!-- Directory UI -->
-    <div id="directoryUI" style="display:none">
+    <!-- Main UI (hidden until unlocked) -->
+    <div id="mainUI" class="card" style="display:none">
       <div class="controls">
-        <input id="searchInput" type="text" placeholder="Search name..." />
-        <button id="searchBtn">Search</button>
-        <button id="resetBtn" class="secondary">Reset</button>
-        <div style="margin-left:auto" class="small">Total entries: <strong id="totalCount">0</strong></div>
+        <div class="search">
+          <input id="q" type="text" placeholder="Search first name, last name or ID..." />
+          <button id="searchBtn">Search</button>
+          <button id="clearBtn" class="ghost">Clear</button>
+        </div>
+        <div class="stats" id="stats">Loading...</div>
+        <div style="margin-left:auto">
+          <button id="exportBtn" class="ghost">Export (fake CSV)</button>
+          <button id="lockBtn" class="ghost">Lock</button>
+        </div>
       </div>
 
-      <div class="row">
-        <div style="flex:1">
-          <div id="list" class="list"></div>
-          <div class="pager">
-            <button id="prevBtn" class="secondary">Prev</button>
-            <div id="pageInfo" class="small"></div>
-            <button id="nextBtn" class="secondary">Next</button>
+      <div class="list" id="listArea"></div>
+      <div class="pager" id="pagerArea"></div>
+      <footer>
+        <div class="small">Generated locally — fictional dataset (5,000 entries). Keep this demo private.</div>
+      </footer>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal" style="display:none">
+      <div class="modal-card">
+        <div class="modal-head">
+          <img id="modalImg" src="" alt="pic"/>
+          <div>
+            <div style="font-weight:900;font-size:18px" id="modalName">Name</div>
+            <div class="small" id="modalMeta">ID • Age</div>
+            <div style="margin-top:6px"><span class="badge" id="modalInc">0</span> incidents</div>
+          </div>
+          <div style="margin-left:auto">
+            <button id="closeModal" class="ghost">Close</button>
           </div>
         </div>
-        <div style="width:260px;padding-left:12px;border-left:1px solid #f0f3f6">
-          <h3 class="small">Filters</h3>
-          <div style="margin-top:8px">
-            <label class="small">Max incident count:
-              <input id="maxInc" type="text" placeholder="e.g., 10" style="width:100%;margin-top:6px" />
-            </label>
-            <div style="margin-top:8px">
-              <button id="applyFilter" class="small">Apply</button>
+
+        <div class="modal-body">
+          <div class="col">
+            <div class="note" id="modalNotes">Notes</div>
+            <div style="margin-top:10px">
+              <strong>Images</strong>
+              <div id="modalImages" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>
             </div>
           </div>
-          <div style="margin-top:18px">
-            <p class="note">This is fictional demo data. Do not use real personal data without consent or lawful basis.</p>
+          <div style="width:260px">
+            <div style="font-weight:800">Profile Data</div>
+            <div style="margin-top:10px" class="small" id="profileFields"></div>
+            <div style="margin-top:12px">
+              <button id="fakeAction" class="ghost">FLAG (demo)</button>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="footer">
-        Demo generated in browser. You can host this page privately (OnionShare) — but never publish real personal data without consent and legal review.
-      </div>
-    </div>
-
-    <!-- Modal profile -->
-    <div id="profileModal" style="display:none" class="modal">
-      <div class="card">
-        <div style="display:flex;gap:12px;align-items:center">
-          <img id="modalThumb" class="thumb" src="" alt="pic" />
-          <div style="flex:1">
-            <h3 id="modalName"></h3>
-            <div class="small" id="modalMeta"></div>
-            <div style="margin-top:8px"><span id="modalIncident" class="tag"></span></div>
-          </div>
-          <div style="text-align:right">
-            <button id="closeModal" class="secondary">Close</button>
-          </div>
-        </div>
-        <div style="margin-top:12px">
-          <strong>Notes</strong>
-          <p id="modalNotes" style="margin:6px 0;color:#333"></p>
-          <strong>Images</strong>
-          <div class="images" id="modalImages"></div>
         </div>
       </div>
     </div>
@@ -111,204 +154,257 @@
   </div>
 
 <script>
-/*
-  Demo directory:
-  - Generates 5000 fictional profiles in browser (random names)
-  - Password protection (demo only) using sessionStorage
-  - Search, pagination, profile modal with images (picsum placeholders)
-  - Replace data step with your own lawful dataset if you have consent
-*/
+/* ===================
+   Demo CASEFILE app
+   - 5000 fictional entries
+   - passcode: 123456 (session-only)
+   - search, paging, modal detail
+   - all data generated locally (no server calls)
+   =================== */
 
-// --- util: simple pseudo-random deterministic name generator ---
-function seededRandom(seed) {
+/* Utility: seeded RNG to keep dataset consistent */
+function seededRandom(seed){
   let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
+  if(s <= 0) s += 2147483646;
   return function(){
     s = s * 16807 % 2147483647;
     return (s - 1) / 2147483646;
   };
 }
-function randomName(rng){
-  const first = ["Alex","Sam","Taylor","Jordan","Chris","Taylor","Morgan","Casey","Jamie","Lee","Avery","Riley","Quinn","Devin","Sky","Rowan"];
-  const last = ["Smith","Johnson","Brown","Taylor","Anderson","Thomas","Jackson","White","Harris","Martin","Thompson","Garcia","Martinez"];
-  return first[Math.floor(rng()*first.length)] + ' ' + last[Math.floor(rng()*last.length)];
+
+/* Simple name lists (prénom + nom) */
+const FIRST = ["Alex","Sam","Taylor","Jordan","Chris","Morgan","Casey","Jamie","Lee","Avery","Riley","Quinn","Devin","Sky","Rowan","Noah","Luca","Mila","Sara","Lina","Amir","Yara","Omar","Nora","Iris","Eli"];
+const LAST = ["Smith","Johnson","Brown","Taylor","Anderson","Thomas","Jackson","White","Harris","Martin","Thompson","Garcia","Martinez","Lopez","Gonzalez","Silva","Khan","Nguyen","Ali","Haddad","Petrov","Ivanov","Moreau","Dubois","Costa","Rossi"];
+
+/* generate a fake national care number (clearly fictional) */
+function makeFakeNID(rng){
+  // pattern: 2 letters + 8 digits + check (X)
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const a = letters.charAt(Math.floor(rng()*letters.length));
+  const b = letters.charAt(Math.floor(rng()*letters.length));
+  let digits = '';
+  for(let i=0;i<8;i++) digits += Math.floor(rng()*10);
+  // simple checksum char from digits
+  const sum = digits.split('').reduce((s,c)=>s + Number(c),0);
+  const check = letters.charAt(sum % letters.length);
+  return `${a}${b}-${digits}-${check}`;
 }
 
-// --- generate N fictional entries (fast) ---
+/* create dataset of 5000 fictional profiles */
 const TOTAL = 5000;
 let DATA = [];
-function generateData(){
+function generateDataset(){
   DATA = [];
-  // use seeded RNG so repeated loads produce same list for demo convenience
-  const rng = seededRandom(123456);
+  const rng = seededRandom(42);
   for(let i=0;i<TOTAL;i++){
-    const name = randomName(rng);
-    const incidents = Math.floor(rng()*20); // 0..19
-    const id = 'id-'+(10000+i);
-    const seed = Math.abs(Math.floor(rng()*1000000));
-    const thumb = `https://picsum.photos/seed/${seed}/200/140`;
+    const fn = FIRST[Math.floor(rng()*FIRST.length)];
+    const ln = LAST[Math.floor(rng()*LAST.length)];
+    const age = 18 + Math.floor(rng()*60);
+    const nid = makeFakeNID(rng);
+    const incidents = Math.floor(rng()*25); // 0..24 incidents
+    const seed = Math.abs(Math.floor(rng()*9999999));
+    const thumb = `https://picsum.photos/seed/${seed}/240/160`;
     const images = [];
-    const imagesCount = 2 + (seed % 4);
-    for(let j=0;j<imagesCount;j++){
-      images.push(`https://picsum.photos/seed/${seed+j}/400/240`);
-    }
+    const imgCount = 2 + (seed % 4);
+    for(let j=0;j<imgCount;j++) images.push(`https://picsum.photos/seed/${seed + j + 1}/640/420`);
+    const notes = `Case file generated for ${fn} ${ln}. Record ID: ${nid}. This is fictional demo data (no relation to real persons).`;
     DATA.push({
-      id, name,
+      id: `CF-${100000 + i}`,
+      firstName: fn,
+      lastName: ln,
+      age,
+      nid,
       incidents,
       thumb,
       images,
-      notes: `This is fictional demo data for ${name}. Use for testing only.`,
-      added: Date.now() - Math.floor(rng()*1000*60*60*24*400)
+      notes,
+      created: Date.now() - Math.floor(rng()*1000*60*60*24*600)
     });
   }
 }
-generateData();
+generateDataset();
 
-// --- Pagination/search state ---
-let state = { page: 1, perPage: 20, query: '', maxInc: null, results: DATA.slice() };
+/* App state */
+let state = {
+  unlocked: false,
+  perPage: 18,
+  page: 1,
+  query: '',
+  results: DATA.slice()
+};
 
-// --- UI references ---
-const pwScreen = document.getElementById('passwordScreen');
-const pwInput = document.getElementById('passwordInput');
-const pwBtn = document.getElementById('pwBtn');
-const directoryUI = document.getElementById('directoryUI');
-const listEl = document.getElementById('list');
-const totalCount = document.getElementById('totalCount');
-const searchInput = document.getElementById('searchInput');
+/* DOM refs */
+const pw = document.getElementById('pw');
+const unlockBtn = document.getElementById('unlockBtn');
+const demoBtn = document.getElementById('demoBtn');
+const pwBox = document.getElementById('pwBox');
+const mainUI = document.getElementById('mainUI');
+const q = document.getElementById('q');
 const searchBtn = document.getElementById('searchBtn');
-const resetBtn = document.getElementById('resetBtn');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const pageInfo = document.getElementById('pageInfo');
-const profileModal = document.getElementById('profileModal');
+const clearBtn = document.getElementById('clearBtn');
+const listArea = document.getElementById('listArea');
+const pagerArea = document.getElementById('pagerArea');
+const stats = document.getElementById('stats');
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
 const modalName = document.getElementById('modalName');
-const modalThumb = document.getElementById('modalThumb');
 const modalMeta = document.getElementById('modalMeta');
 const modalNotes = document.getElementById('modalNotes');
 const modalImages = document.getElementById('modalImages');
-const modalIncident = document.getElementById('modalIncident');
+const modalInc = document.getElementById('modalInc');
+const profileFields = document.getElementById('profileFields');
 const closeModal = document.getElementById('closeModal');
-const maxIncInput = document.getElementById('maxInc');
-const applyFilterBtn = document.getElementById('applyFilter');
+const exportBtn = document.getElementById('exportBtn');
+const lockBtn = document.getElementById('lockBtn');
 
-// --- simple session "password" check (demo only) ---
-const DEMO_PASSWORD = 'demo-pass';
-pwBtn.addEventListener('click', ()=>{
-  const v = pwInput.value || '';
-  if(v === DEMO_PASSWORD){
-    sessionStorage.setItem('demo_pw', v); // session-only
-    showDirectory();
+/* Password logic: session-only '123456' */
+const PASS = '123456';
+function unlock(){
+  const v = pw.value.trim();
+  if(v === PASS){
+    sessionStorage.setItem('casefile_pass', '1'); // session flag
+    state.unlocked = true;
+    pwBox.style.display = 'none';
+    mainUI.style.display = 'block';
+    render();
   } else {
-    alert('Wrong password (demo: demo-pass). This demo uses fictional data only.');
+    alert('Incorrect passcode.');
   }
+}
+unlockBtn.addEventListener('click', unlock);
+demoBtn.addEventListener('click', ()=>{
+  pw.value = PASS;
+  unlock();
 });
 
-function showDirectory(){
-  pwScreen.style.display = 'none';
-  directoryUI.style.display = 'block';
-  state.results = DATA.slice();
-  state.page = 1;
-  render();
-}
+/* Lock: clear session */
+lockBtn.addEventListener('click', ()=>{
+  sessionStorage.removeItem('casefile_pass');
+  state.unlocked = false;
+  pw.value = '';
+  mainUI.style.display = 'none';
+  pwBox.style.display = 'block';
+});
 
-// --- search & filter ---
-function applyFilters(){
+/* Search & filters */
+function applySearch(){
+  const qq = (q.value || '').trim().toLowerCase();
+  state.query = qq;
   let res = DATA.slice();
-  const q = (state.query || '').trim().toLowerCase();
-  if(q){
-    res = res.filter(it => it.name.toLowerCase().includes(q));
-  }
-  if(state.maxInc !== null && state.maxInc !== ''){
-    const maxv = Number(state.maxInc);
-    if(!isNaN(maxv)) res = res.filter(it => it.incidents <= maxv);
+  if(qq){
+    res = res.filter(it=>{
+      return it.firstName.toLowerCase().includes(qq) ||
+             it.lastName.toLowerCase().includes(qq) ||
+             it.id.toLowerCase().includes(qq) ||
+             it.nid.toLowerCase().includes(qq);
+    });
   }
   state.results = res;
   state.page = 1;
+  render();
 }
-searchBtn.addEventListener('click', ()=>{
-  state.query = searchInput.value;
-  state.maxInc = maxIncInput.value;
-  applyFilters();
-  render();
+searchBtn.addEventListener('click', applySearch);
+clearBtn.addEventListener('click', ()=>{
+  q.value=''; state.query=''; state.results = DATA.slice(); state.page = 1; render();
 });
-resetBtn.addEventListener('click', ()=>{
-  searchInput.value=''; maxIncInput.value=''; state.query=''; state.maxInc=null; state.results = DATA.slice(); state.page=1; render();
-});
-applyFilterBtn.addEventListener('click', ()=>{
-  state.query = searchInput.value;
-  state.maxInc = maxIncInput.value;
-  applyFilters();
-  render();
-});
+q.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') applySearch(); });
 
-// --- paging & rendering ---
+/* Render list with pagination */
 function render(){
   const total = state.results.length;
-  totalCount.textContent = total;
+  stats.textContent = `${total.toLocaleString()} profiles • Page ${state.page}`;
   const per = state.perPage;
   const maxPage = Math.max(1, Math.ceil(total / per));
   if(state.page > maxPage) state.page = maxPage;
-  const start = (state.page-1)*per;
-  const pageItems = state.results.slice(start, start+per);
+  const start = (state.page - 1) * per;
+  const pageItems = state.results.slice(start, start + per);
 
-  listEl.innerHTML = '';
+  listArea.innerHTML = '';
   pageItems.forEach(it=>{
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <img class="thumb" src="${it.thumb}" alt="pic" />
-      <div class="meta">
-        <h3>${it.name}</h3>
-        <p class="small">${new Date(it.added).toLocaleDateString()} • ID: ${it.id}</p>
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="avatar"><img src="${it.thumb}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" /></div>
+      <div class="info">
+        <div class="title">${it.firstName} ${it.lastName} <span style="margin-left:8px;font-weight:600;color:#9fb0bf">${it.id}</span></div>
+        <div class="meta">Prénom & Nom • NID: ${it.nid} • Age: ${it.age}</div>
       </div>
-      <div class="right">
+      <div style="width:140px;text-align:right">
         <div class="small">Incidents</div>
-        <div style="font-weight:700">${it.incidents}</div>
-        <div style="margin-top:8px"><button data-id="${it.id}" class="small">View</button></div>
+        <div style="font-weight:900;color:var(--accent);font-size:18px">${it.incidents}</div>
+        <div style="margin-top:8px"><button class="ghost viewBtn" data-id="${it.id}">View</button></div>
       </div>
     `;
-    listEl.appendChild(div);
+    listArea.appendChild(row);
   });
 
-  pageInfo.textContent = `Page ${state.page} / ${maxPage}`;
-  prevBtn.disabled = (state.page <= 1);
-  nextBtn.disabled = (state.page >= maxPage);
+  // pager
+  pagerArea.innerHTML = '';
+  const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.className='ghost';
+  prev.onclick = ()=>{ if(state.page>1){ state.page--; render(); } };
+  const next = document.createElement('button'); next.textContent = 'Next'; next.className='ghost';
+  next.onclick = ()=>{ if(state.page < maxPage){ state.page++; render(); } };
+  const info = document.createElement('div'); info.className='small'; info.textContent = `Page ${state.page} / ${maxPage}`;
+  pagerArea.appendChild(prev); pagerArea.appendChild(info); pagerArea.appendChild(next);
 
   // attach view buttons
-  listEl.querySelectorAll('button[data-id]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const id = btn.getAttribute('data-id');
-      const item = DATA.find(x=>x.id===id);
-      if(item) openProfile(item);
-    });
-  });
+  document.querySelectorAll('.viewBtn').forEach(b=> b.addEventListener('click', (ev)=>{
+    const id = ev.currentTarget.getAttribute('data-id');
+    const profile = DATA.find(x=>x.id === id);
+    if(profile) openModal(profile);
+  }));
 }
 
-// pager
-prevBtn.addEventListener('click', ()=>{ if(state.page>1) state.page--; render(); });
-nextBtn.addEventListener('click', ()=>{ state.page++; render(); });
-
-// open profile modal
-function openProfile(it){
-  modalName.textContent = it.name;
-  modalThumb.src = it.thumb;
-  modalMeta.textContent = `ID: ${it.id} • Added: ${new Date(it.added).toLocaleString()}`;
-  modalNotes.textContent = it.notes;
+/* Modal open */
+function openModal(profile){
+  modalImg.src = profile.images[0] || profile.thumb;
+  modalName.textContent = `${profile.firstName} ${profile.lastName}`;
+  modalMeta.textContent = `ID: ${profile.id} • NID: ${profile.nid} • Age: ${profile.age}`;
+  modalNotes.textContent = profile.notes;
+  modalInc.textContent = profile.incidents;
+  profileFields.innerHTML = `
+    <div><strong>Prénom :</strong> ${profile.firstName}</div>
+    <div><strong>Nom :</strong> ${profile.lastName}</div>
+    <div><strong>Age :</strong> ${profile.age}</div>
+    <div><strong>National Care #:</strong> ${profile.nid}</div>
+    <div><strong>Created:</strong> ${new Date(profile.created).toLocaleString()}</div>
+  `;
   modalImages.innerHTML = '';
-  it.images.forEach(url => {
-    const im = document.createElement('img'); im.src = url; modalImages.appendChild(im);
+  profile.images.forEach(u=>{
+    const im = document.createElement('img'); im.src = u; im.style.width='120px'; im.style.height='80px'; im.style.objectFit='cover'; im.style.borderRadius='6px';
+    modalImages.appendChild(im);
   });
-  modalIncident.textContent = `${it.incidents} incidents`;
-  profileModal.style.display = 'flex';
+  modal.style.display = 'flex';
 }
-closeModal.addEventListener('click', ()=> profileModal.style.display = 'none');
+closeModal.addEventListener('click', ()=> modal.style.display = 'none');
 
-// search on enter
-searchInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ searchBtn.click(); } });
+/* Export fake CSV (client-side) */
+exportBtn.addEventListener('click', ()=>{
+  const rows = [['id','firstName','lastName','age','nid','incidents'].join(',')];
+  DATA.forEach(it => rows.push([it.id, it.firstName, it.lastName, it.age, it.nid, it.incidents].map(v=>`"${v}"`).join(',')));
+  const blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'fake_casefile.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
 
-// initial render placeholder (until unlocked)
-render();
+/* Keep pass in session only; if present on load, auto-unlock */
+window.addEventListener('load', ()=>{
+  if(sessionStorage.getItem('casefile_pass')){
+    state.unlocked = true;
+    pwBox.style.display = 'none';
+    mainUI.style.display = 'block';
+    render();
+  } else {
+    pwBox.style.display = 'block';
+    mainUI.style.display = 'none';
+  }
+});
 
+/* Clear session (password) & all chat/history on close */
+window.addEventListener('beforeunload', ()=>{
+  sessionStorage.removeItem('casefile_pass');
+  // no persistent storage used for profiles
+});
 </script>
 </body>
 </html>
