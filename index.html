@@ -2,184 +2,155 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>P2P Chat</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minimal P2P Chat</title>
 </head>
 <body style="display:flex;flex-direction:column;align-items:center;font-family:sans-serif;">
 <h2>P2P Chat</h2>
 
 <div>
-  <input id="password" type="password" placeholder="Password for encryption">
-  <button id="start">Start Chat</button>
+  <input id="password" type="password" placeholder="Shared password">
+  <button id="startBtn">Start</button>
 </div>
 
-<div id="qrSection" style="display:none;text-align:center;">
-  <p>Show these 4 QR codes to the peer (in order):</p>
-  <div id="qrCodes"></div>
-  <p>Or <button id="scanBtn">Scan Peer QR</button></p>
-  <video id="video" style="width:250px;display:none;"></video>
+<!-- QR / Scan section -->
+<div id="qrBox" style="display:none;text-align:center;">
+  <p id="qrLabel"></p>
+  <div id="qr"></div>
+  <button id="nextBtn" style="display:none;">Next QR</button>
+  <button id="scanBtn">Scan</button>
+  <video id="video" style="width:240px;display:none;"></video>
 </div>
 
-<div id="chat" style="display:none;width:90%;max-width:500px;">
-  <div id="messages" style="border:1px solid #ccc;height:200px;overflow:auto;margin:5px;padding:5px;"></div>
-  <input id="msg" placeholder="Type message..." style="width:80%;">
+<!-- Chat UI -->
+<div id="chat" style="display:none;width:90%;max-width:400px;">
+  <div id="msgs" style="border:1px solid #ccc;height:200px;overflow:auto;margin:5px;padding:5px;"></div>
+  <input id="msg" style="width:75%;" placeholder="Message">
   <button id="send">Send</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 <script>
-const pwInput=document.getElementById('password');
-const startBtn=document.getElementById('start');
-const qrSection=document.getElementById('qrSection');
-const qrCodesDiv=document.getElementById('qrCodes');
+const pw=document.getElementById('password');
+const startBtn=document.getElementById('startBtn');
+const qrBox=document.getElementById('qrBox');
+const qrDiv=document.getElementById('qr');
+const nextBtn=document.getElementById('nextBtn');
 const scanBtn=document.getElementById('scanBtn');
-const chatDiv=document.getElementById('chat');
-const messages=document.getElementById('messages');
-const sendBtn=document.getElementById('send');
-const msgInput=document.getElementById('msg');
+const label=document.getElementById('qrLabel');
+const chat=document.getElementById('chat');
+const msgs=document.getElementById('msgs');
+const msg=document.getElementById('msg');
+const send=document.getElementById('send');
+const video=document.getElementById('video');
 
-let pc,dc,password,remoteReady=false;
+let pc,dc,password;
+let parts=[], index=0;
 
-async function deriveKey(pw){
-  const enc=new TextEncoder().encode(pw);
-  const keyMaterial=await crypto.subtle.importKey("raw",enc,{name:"PBKDF2"},false,["deriveKey"]);
-  return crypto.subtle.deriveKey(
-      {name:"PBKDF2",salt:enc,iterations:100000,hash:"SHA-256"},
-      keyMaterial,
-      {name:"AES-GCM",length:256},
-      false,
-      ["encrypt","decrypt"]
-  );
+async function keyFromPw(p){
+  const enc=new TextEncoder().encode(p);
+  const km=await crypto.subtle.importKey("raw",enc,{name:"PBKDF2"},false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:enc,iterations:1e5,hash:"SHA-256"},
+         km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
 }
-
-async function encrypt(str){
+async function encText(t){
   const iv=crypto.getRandomValues(new Uint8Array(12));
-  const key=await deriveKey(password);
-  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,new TextEncoder().encode(str));
+  const k=await keyFromPw(password);
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},k,new TextEncoder().encode(t));
   return btoa(JSON.stringify({iv:Array.from(iv),ct:Array.from(new Uint8Array(ct))}));
 }
-async function decrypt(data){
-  const {iv,ct}=JSON.parse(atob(data));
-  const key=await deriveKey(password);
-  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(iv)},key,new Uint8Array(ct));
+async function decText(t){
+  const {iv,ct}=JSON.parse(atob(t));
+  const k=await keyFromPw(password);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(iv)},k,new Uint8Array(ct));
   return new TextDecoder().decode(pt);
 }
-
-function append(msg,own=false){
+function addMsg(t,me=false){
   const d=document.createElement('div');
-  d.textContent=(own?"Me: ":"Peer: ")+msg;
-  messages.appendChild(d);
-  messages.scrollTop=messages.scrollHeight;
+  d.textContent=(me?"Me: ":"Peer: ")+t;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+}
+function showQrParts(pieces){
+  parts=pieces; index=0;
+  qrDiv.innerHTML="";
+  nextBtn.style.display= parts.length>1?"inline":"none";
+  drawCurrent();
+}
+function drawCurrent(){
+  qrDiv.innerHTML="";
+  label.textContent=`QR ${index+1} / ${parts.length}`;
+  new QRCode(qrDiv,{text:parts[index],width:200,height:200});
+}
+nextBtn.onclick=()=>{ if(++index<parts.length) drawCurrent(); };
+
+function split4(s){
+  const sz=Math.ceil(s.length/4),out=[];
+  for(let i=0;i<4;i++) out.push(s.slice(i*sz,(i+1)*sz));
+  return out;
 }
 
-function splitString(s,n){
-  const size=Math.ceil(s.length/n),parts=[];
-  for(let i=0;i<n;i++) parts.push(s.slice(i*size,(i+1)*size));
-  return parts;
-}
-
-async function createOffer(){
+async function makeOffer(){
   pc=new RTCPeerConnection();
-  dc=pc.createDataChannel("chat");
-  dc.onmessage=async e=>append(await decrypt(e.data));
-  const offer=await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  return btoa(JSON.stringify(offer));
+  dc=pc.createDataChannel("c");
+  dc.onmessage=async e=>addMsg(await decText(e.data));
+  const off=await pc.createOffer();
+  await pc.setLocalDescription(off);
+  return btoa(JSON.stringify(off));
 }
 
 startBtn.onclick=async()=>{
-  password=pwInput.value;
-  if(!password){alert("Enter password");return;}
-  const offer64=await createOffer();
-  qrSection.style.display="block";
-  qrCodesDiv.innerHTML="";
-  splitString(offer64,4).forEach(p=>{
-    const div=document.createElement('div');
-    new QRCode(div,{text:p,width:180,height:180});
-    qrCodesDiv.appendChild(div);
-  });
+  password=pw.value;
+  if(!password){alert("enter password");return;}
+  const offer64=await makeOffer();
+  qrBox.style.display="block";
+  showQrParts(split4(offer64));
 };
 
-scanBtn.onclick=()=>{
-  const video=document.getElementById('video');
-  video.style.display="block";
-  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(stream=>{
-    video.srcObject=stream;video.play();
-    const canvas=document.createElement('canvas');
-    let parts=[];
-    const scan=()=>{
-      if(video.readyState===video.HAVE_ENOUGH_DATA){
-        canvas.width=video.videoWidth;
-        canvas.height=video.videoHeight;
-        const ctx=canvas.getContext("2d");
-        ctx.drawImage(video,0,0,canvas.width,canvas.height);
-        const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-        const code=jsQR(img.data,canvas.width,canvas.height);
-        if(code && !parts.includes(code.data)){
-          parts.push(code.data);
-          if(parts.length===4){
-            video.pause();
-            stream.getTracks().forEach(t=>t.stop());
-            join(parts.join(""));
-            return;
-          } else alert(`Scanned ${parts.length}/4`);
-        }
-      }
-      requestAnimationFrame(scan);
+scanBtn.onclick=()=>startScan(async full=>{
+  if(!pc){ // joining peer
+    password=pw.value;
+    pc=new RTCPeerConnection();
+    pc.ondatachannel=e=>{
+      dc=e.channel;
+      dc.onmessage=async ev=>addMsg(await decText(ev.data));
     };
-    scan();
-  });
-};
+    const off=JSON.parse(atob(full));
+    await pc.setRemoteDescription(off);
+    const ans=await pc.createAnswer();
+    await pc.setLocalDescription(ans);
+    showQrParts(split4(btoa(JSON.stringify(ans))));
+    // allow first peer to scan answer next
+  } else { // first peer scanning answer
+    const ans=JSON.parse(atob(full));
+    await pc.setRemoteDescription(ans);
+    chat.style.display="block";
+    qrBox.style.display="none";
+  }
+});
 
-async function join(offer64){
-  password=pwInput.value;
-  pc=new RTCPeerConnection();
-  pc.ondatachannel=e=>{
-    dc=e.channel;
-    dc.onmessage=async ev=>append(await decrypt(ev.data));
-  };
-  const offer=JSON.parse(atob(offer64));
-  await pc.setRemoteDescription(offer);
-  const answer=await pc.createAnswer();
-  await pc.setLocalDescription(answer);
-  // show answer as QR (split)
-  qrCodesDiv.innerHTML="<p>Send these 4 QR codes back:</p>";
-  splitString(btoa(JSON.stringify(answer)),4).forEach(p=>{
-    const div=document.createElement('div');
-    new QRCode(div,{text:p,width:180,height:180});
-    qrCodesDiv.appendChild(div);
-  });
-  // second user scanning stops here; first user scans answer next
-  scanBtn.textContent="Scan Peer QR (Answer)";
-  scanBtn.onclick=()=>scanAnswer();
-}
-
-function scanAnswer(){
-  const video=document.getElementById('video');
+function startScan(done){
+  let chunks=[];
   video.style.display="block";
   navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(stream=>{
     video.srcObject=stream;video.play();
     const canvas=document.createElement('canvas');
-    let parts=[];
     const scan=()=>{
       if(video.readyState===video.HAVE_ENOUGH_DATA){
-        canvas.width=video.videoWidth;
-        canvas.height=video.videoHeight;
+        canvas.width=video.videoWidth;canvas.height=video.videoHeight;
         const ctx=canvas.getContext("2d");
         ctx.drawImage(video,0,0,canvas.width,canvas.height);
         const img=ctx.getImageData(0,0,canvas.width,canvas.height);
         const code=jsQR(img.data,canvas.width,canvas.height);
-        if(code && !parts.includes(code.data)){
-          parts.push(code.data);
-          if(parts.length===4){
-            video.pause();
+        if(code && !chunks.includes(code.data)){
+          chunks.push(code.data);
+          alert(`Scanned ${chunks.length}/4`);
+          if(chunks.length===4){
             stream.getTracks().forEach(t=>t.stop());
-            const answer=JSON.parse(atob(parts.join("")));
-            pc.setRemoteDescription(answer);
-            chatDiv.style.display="block";
+            video.style.display="none";
+            done(chunks.join(""));
             return;
-          } else alert(`Scanned ${parts.length}/4`);
+          }
         }
       }
       requestAnimationFrame(scan);
@@ -188,12 +159,11 @@ function scanAnswer(){
   });
 }
 
-sendBtn.onclick=async()=>{
-  const text=msgInput.value.trim();
-  if(!text||!dc) return;
-  dc.send(await encrypt(text));
-  append(text,true);
-  msgInput.value="";
+send.onclick=async()=>{
+  if(!msg.value||!dc) return;
+  dc.send(await encText(msg.value));
+  addMsg(msg.value,true);
+  msg.value="";
 };
 </script>
 </body>
