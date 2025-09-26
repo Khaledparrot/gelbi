@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FICHE CLASSIFIÉE — Démo (Fictionnel)</title>
+<style>
+  :root{
+    --bg:#07060a; --card:#0d0b0f; --muted:#9aa9b0; --danger:#d32f2f; --accent:#ff6b6b;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:
+    radial-gradient(circle at 10% 10%, rgba(211,47,47,0.04), transparent 10%),
+    linear-gradient(180deg,#020203 0%, #071018 100%); color:#e6f3f7}
+  .wrap{max-width:1100px;margin:28px auto;padding:18px}
+  header{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;background:linear-gradient(90deg, rgba(211,47,47,0.06), transparent);box-shadow:0 8px 30px rgba(0,0,0,.6)}
+  .logo{width:64px;height:64px;border-radius:8px;background:#081017;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--danger);font-size:18px;border:1px solid rgba(255,255,255,0.02)}
+  h1{margin:0;font-size:20px}
+  .subtitle{color:var(--muted);font-size:13px}
+  .alert{margin-left:auto;padding:6px 10px;border-radius:8px;background:rgba(211,47,47,0.12);color:var(--danger);font-weight:800;border:1px solid rgba(211,47,47,0.18)}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;margin-top:18px;border:1px solid rgba(255,255,255,0.02)}
+  /* password */
+  .pw-box{max-width:600px;margin:26px auto;padding:18px;border-radius:10px;background:var(--card);box-shadow:0 8px 30px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,0.02)}
+  label{display:block;margin-bottom:8px;color:var(--muted);font-size:13px}
+  input[type="password"], input[type="text"]{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:15px}
+  button{background:var(--danger);color:white;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+  /* controls */
+  .controls{display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap}
+  .search{flex:1;display:flex;gap:8px}
+  .search input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+  .stats{color:var(--muted);font-size:13px}
+  /* list */
+  .list{margin-top:12px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+  .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px dashed rgba(255,255,255,0.02);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+  .row:hover{background:linear-gradient(90deg, rgba(211,47,47,0.03), transparent)}
+  .avatar{width:64px;height:48px;border-radius:6px;background:#081018;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;border:1px solid rgba(255,255,255,0.02)}
+  .info{flex:1}
+  .title{font-weight:800;font-size:15px;margin-bottom:4px}
+  .meta{color:var(--muted);font-size:13px}
+  .badge{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.02);font-weight:700;color:var(--danger)}
+  .pager{display:flex;gap:8px;justify-content:center;padding:12px}
+  .small{font-size:13px;color:var(--muted)}
+  /* modal */
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,8,0.75);z-index:60}
+  .modal-card{background:#071417;padding:18px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);max-width:880px;width:94%;color:#eaf6f9;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+  .modal-head{display:flex;align-items:center;gap:14px}
+  .modal-body{display:flex;gap:18px;margin-top:12px}
+  .col{flex:1}
+  .note{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.01);color:var(--muted)}
+  .proof{background:#0b0f12;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);color:#cfe6e9;margin-top:10px}
+  .pw-jurid{display:flex;gap:8px;margin-top:8px}
+  .pw-jurid input{flex:1}
+  .dangerline{height:6px;background:linear-gradient(90deg, rgba(211,47,47,0.9), rgba(255,255,255,0));border-radius:4px;margin-top:8px}
+  footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+  @media(max-width:700px){
+    .modal-body{flex-direction:column}
+    .avatar{width:56px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">SIG</div>
+      <div>
+        <h1>FICHIER CLASSIFIÉ — CENTRE D'ENQUÊTE</h1>
+        <div class="subtitle">Accès restreint — démonstration fictionnelle</div>
+      </div>
+      <div class="alert">ACCÈS RESTREINT</div>
+    </header>
+
+    <!-- Boîte mot de passe -->
+    <div id="pwBox" class="pw-box card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-weight:900">Saisir la paraphrase d'accès</div>
+          <div class="small" style="margin-top:6px">Le mot de passe est stocké uniquement pour la session (fermeture de l'onglet le supprime).</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Indice : mot de passe de démonstration = <strong>123456</strong></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label for="pw">Paraphrase</label>
+        <input id="pw" type="password" placeholder="Entrez la paraphrase (ex: 123456)" />
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button id="unlockBtn">Déverrouiller</button>
+        <button id="quickBtn" class="ghost">Démo (auto)</button>
+      </div>
+      <div class="dangerline"></div>
+      <p class="small" style="margin-top:10px">Avertissement : toutes les données de ce site sont **fictionnelles** et générées localement. Ne pas utiliser de données réelles.</p>
+    </div>
+
+    <!-- UI principale -->
+    <div id="mainUI" class="card" style="display:none">
+      <div class="controls">
+        <div class="search">
+          <input id="q" type="text" placeholder="Rechercher prénom, nom, ville ou identifiant..." />
+          <button id="searchBtn">Rechercher</button>
+          <button id="clearBtn" class="ghost">Réinitialiser</button>
+        </div>
+        <div class="stats" id="stats">Chargement...</div>
+        <div style="margin-left:auto">
+          <button id="exportBtn" class="ghost">Exporter (CSV fictif)</button>
+          <button id="lockBtn" class="ghost">Verrouiller</button>
+        </div>
+      </div>
+
+      <div class="list" id="listArea"></div>
+      <div class="pager" id="pagerArea"></div>
+      <footer>
+        <div class="small">Données générées localement — jeu de 5 000 entrées fictives.</div>
+      </footer>
+    </div>
+
+    <!-- Modal profil -->
+    <div id="modal" class="modal" style="display:none">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div class="avatar" id="modalAvatar">—</div>
+          <div>
+            <div style="font-weight:900;font-size:18px" id="modalName">Nom Prénom</div>
+            <div class="small" id="modalMeta">ID • Âge • Ville</div>
+            <div style="margin-top:6px"><span class="badge" id="modalInc">0</span> incidents</div>
+          </div>
+          <div style="margin-left:auto">
+            <button id="closeModal" class="ghost">Fermer</button>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <div class="col">
+            <div class="note" id="modalNotes">Notes</div>
+
+            <div style="margin-top:12px">
+              <strong>Preuves visuelles</strong>
+              <div class="proof" id="proofArea">
+                <div class="small">Accès restreint — mot de passe juridique requis.</div>
+                <div class="pw-jurid" style="margin-top:8px">
+                  <input id="juridPwd" type="password" placeholder="Mot de passe juridique..." />
+                  <button id="unlockProofBtn" class="ghost">Valider</button>
+                </div>
+                <div style="margin-top:8px" class="small">Si vous ne connaissez pas le mot de passe, consultez la <button id="showPwdList" class="ghost">liste juridique</button> (démo).</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="width:260px">
+            <div style="font-weight:800">Informations</div>
+            <div style="margin-top:10px" class="small" id="profileFields"></div>
+            <div style="margin-top:12px">
+              <button id="flagBtn" class="ghost">Marquer (démo)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal mots de passe juridiques -->
+    <div id="pwdListModal" class="modal" style="display:none">
+      <div class="modal-card">
+        <h3>Mots de passe juridiques (démo)</h3>
+        <p class="small">Ces mots de passe sont fictifs et servent uniquement à déverrouiller des preuves factices dans la démo.</p>
+        <ul id="pwdList"></ul>
+        <div style="margin-top:12px;text-align:right">
+          <button id="closePwdList" class="ghost">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* =====================
+   Démo FICHE CLASSIFIÉE — tout fictif
+   - 5000 profils générés localement
+   - champs visibles: nom complet, âge, ville, incidents, identifiant unique
+   - preuves accessibles après mot de passe "juridique" (5 mots de passe fictifs)
+   - interface en français
+   ===================== */
+
+/* ---------- générateur déterministe (seeded) ---------- */
+function seededRandom(seed){
+  let s = seed % 2147483647;
+  if(s <= 0) s += 2147483646;
+  return function(){
+    s = s * 16807 % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+/* listes de prénoms, noms, villes (fictionnels / courants) */
+const FIRST = ["Alex","Sam","Taylor","Jordan","Chris","Morgan","Casey","Jamie","Lee","Avery","Riley","Quinn","Devin","Rowan","Noah","Luca","Mila","Sara","Lina","Amir","Yara","Omar","Nora","Iris","Eli","Hugo","Zoé","Léa"];
+const LAST = ["Dupont","Martin","Bernard","Petit","Durand","Leroy","Morel","Garcia","Lefevre","Rousseau","Faure","Meyer","Marchand","Garnier","Chevalier","Dufour","Blanc","Guerin","Besson","Francois"];
+const CITIES = ["Paris","Lyon","Marseille","Toulouse","Nice","Nantes","Strasbourg","Montpellier","Bordeaux","Lille","Rennes","Grenoble","Dijon","Angers","Nîmes","Le Havre","Saint-Étienne"];
+
+/* créer N profils */
+const TOTAL = 5000;
+let DATA = [];
+function makeFakeNID(rng){
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const a = letters.charAt(Math.floor(rng()*letters.length));
+  const b = letters.charAt(Math.floor(rng()*letters.length));
+  let digits = '';
+  for(let i=0;i<7;i++) digits += Math.floor(rng()*10);
+  const check = letters.charAt((digits.split('').reduce((s,c)=>s+Number(c),0)) % letters.length);
+  return `${a}${b}-${digits}-${check}`;
+}
+function genData(){
+  DATA = [];
+  const rng = seededRandom(2025);
+  for(let i=0;i<TOTAL;i++){
+    const fn = FIRST[Math.floor(rng()*FIRST.length)];
+    const ln = LAST[Math.floor(rng()*LAST.length)];
+    const age = 18 + Math.floor(rng()*65);
+    const city = CITIES[Math.floor(rng()*CITIES.length)];
+    const incidents = Math.floor(rng()*30); // 0..29
+    const nid = makeFakeNID(rng);
+    const id = `FIC-${100000 + i}`;
+    const notes = `Dossier généré (fiction). Aucune correspondance avec des personnes réelles.`;
+    DATA.push({ id, firstName: fn, lastName: ln, age, city, incidents, nid, notes });
+  }
+}
+genData();
+
+/* ---------- app state ---------- */
+let state = { page: 1, perPage: 20, query: '', results: DATA.slice() };
+
+/* ---------- DOM refs ---------- */
+const pw = document.getElementById('pw');
+const unlockBtn = document.getElementById('unlockBtn');
+const quickBtn = document.getElementById('quickBtn');
+const pwBox = document.getElementById('pwBox');
+const mainUI = document.getElementById('mainUI');
+const qEl = document.getElementById('q');
+const searchBtn = document.getElementById('searchBtn');
+const clearBtn = document.getElementById('clearBtn');
+const listArea = document.getElementById('listArea');
+const pagerArea = document.getElementById('pagerArea');
+const stats = document.getElementById('stats');
+const modal = document.getElementById('modal');
+const modalAvatar = document.getElementById('modalAvatar');
+const modalName = document.getElementById('modalName');
+const modalMeta = document.getElementById('modalMeta');
+const modalNotes = document.getElementById('modalNotes');
+const modalInc = document.getElementById('modalInc');
+const profileFields = document.getElementById('profileFields');
+const closeModal = document.getElementById('closeModal');
+const juridPwd = document.getElementById('juridPwd');
+const unlockProofBtn = document.getElementById('unlockProofBtn');
+const proofArea = document.getElementById('proofArea');
+const showPwdList = document.getElementById('showPwdList');
+const pwdListModal = document.getElementById('pwdListModal');
+const pwdList = document.getElementById('pwdList');
+const closePwdList = document.getElementById('closePwdList');
+const exportBtn = document.getElementById('exportBtn');
+const lockBtn = document.getElementById('lockBtn');
+
+/* ---------- mots de passe juridiques fictifs (5) ---------- */
+/* Ces mots sont fictifs ; vous pouvez les modifier */
+const JURIDICAL_KEYS = [
+  { role: "Directeur Juridique", pass: "juridique-1" },
+  { role: "Chef de la sécurité", pass: "seg-omega" },
+  { role: "Président du conseil (fiction)", pass: "presid-42" },
+  { role: "Directeur exécutif", pass: "exec-77" },
+  { role: "Responsable archives", pass: "archives-open" }
+];
+
+/* affiche la liste (démo) */
+showPwdList.addEventListener('click', ()=>{
+  pwdList.innerHTML = '';
+  JURIDICAL_KEYS.forEach(k=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${k.role} :</strong> <code>${k.pass}</code>`;
+    pwdList.appendChild(li);
+  });
+  pwdListModal.style.display = 'flex';
+});
+closePwdList.addEventListener('click', ()=> pwdListModal.style.display = 'none');
+
+/* ---------- mot de passe d'accès principal (session-only) ---------- */
+const MAIN_PASS = '123456';
+function unlock(){
+  const v = pw.value.trim();
+  if(v === MAIN_PASS){
+    sessionStorage.setItem('demo_access', '1');
+    pwBox.style.display = 'none';
+    mainUI.style.display = 'block';
+    state.results = DATA.slice();
+    state.page = 1;
+    render();
+  } else {
+    alert('Paraphrase incorrecte.');
+  }
+}
+unlockBtn.addEventListener('click', unlock);
+quickBtn.addEventListener('click', ()=>{
+  pw.value = MAIN_PASS;
+  unlock();
+});
+
+/* lock */
+lockBtn.addEventListener('click', ()=>{
+  sessionStorage.removeItem('demo_access');
+  pw.value = '';
+  mainUI.style.display = 'none';
+  pwBox.style.display = 'block';
+});
+
+/* ---------- recherche / filtre ---------- */
+function applySearch(){
+  const q = (qEl.value || '').trim().toLowerCase();
+  state.query = q;
+  let res = DATA.slice();
+  if(q){
+    res = res.filter(it => {
+      return it.firstName.toLowerCase().includes(q) ||
+             it.lastName.toLowerCase().includes(q) ||
+             it.id.toLowerCase().includes(q) ||
+             it.nid.toLowerCase().includes(q) ||
+             it.city.toLowerCase().includes(q);
+    });
+  }
+  state.results = res;
+  state.page = 1;
+  render();
+}
+searchBtn.addEventListener('click', applySearch);
+qEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') applySearch(); });
+clearBtn.addEventListener('click', ()=>{ qEl.value=''; state.query=''; state.results = DATA.slice(); state.page=1; render(); });
+
+/* ---------- rendu liste et pagination ---------- */
+function render(){
+  const total = state.results.length;
+  stats.textContent = `${total.toLocaleString()} dossiers • Page ${state.page}`;
+  const per = state.perPage;
+  const maxPage = Math.max(1, Math.ceil(total / per));
+  if(state.page > maxPage) state.page = maxPage;
+  const start = (state.page - 1) * per;
+  const pageItems = state.results.slice(start, start + per);
+
+  listArea.innerHTML = '';
+  pageItems.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'row';
+    // avatar shows initials (no real images)
+    const initials = (it.firstName[0] || '?') + (it.lastName[0] || '?');
+    row.innerHTML = `
+      <div class="avatar">${initials}</div>
+      <div class="info">
+        <div class="title">${it.firstName} ${it.lastName} <span style="margin-left:8px;font-weight:600;color:#9aa9b0">${it.id}</span></div>
+        <div class="meta">Âge: ${it.age} • Ville: ${it.city} • NID: ${it.nid}</div>
+      </div>
+      <div style="width:140px;text-align:right">
+        <div class="small">Incidents</div>
+        <div style="font-weight:900;color:var(--danger);font-size:18px">${it.incidents}</div>
+        <div style="margin-top:8px"><button class="ghost viewBtn" data-id="${it.id}">Ouvrir</button></div>
+      </div>
+    `;
+    listArea.appendChild(row);
+  });
+
+  // pager
+  pagerArea.innerHTML = '';
+  const prev = document.createElement('button'); prev.textContent = 'Précédent'; prev.className='ghost';
+  prev.onclick = ()=>{ if(state.page>1){ state.page--; render(); } };
+  const next = document.createElement('button'); next.textContent = 'Suivant'; next.className='ghost';
+  next.onclick = ()=>{ if(state.page < maxPage){ state.page++; render(); } };
+  const info = document.createElement('div'); info.className='small'; info.textContent = `Page ${state.page} / ${maxPage}`;
+  pagerArea.appendChild(prev); pagerArea.appendChild(info); pagerArea.appendChild(next);
+
+  // attach view buttons
+  document.querySelectorAll('.viewBtn').forEach(b=> b.addEventListener('click', (ev)=>{
+    const id = ev.currentTarget.getAttribute('data-id');
+    const profile = DATA.find(x=>x.id === id);
+    if(profile) openModal(profile);
+  }));
+}
+
+/* ---------- ouverture modal profil ---------- */
+let currentProfile = null;
+function openModal(profile){
+  currentProfile = profile;
+  modalAvatar.textContent = (profile.firstName[0]||'?') + (profile.lastName[0]||'?');
+  modalName.textContent = `${profile.firstName} ${profile.lastName}`;
+  modalMeta.textContent = `ID: ${profile.id} • NID: ${profile.nid} • Âge: ${profile.age} • Ville: ${profile.city}`;
+  modalNotes.textContent = profile.notes;
+  modalInc.textContent = profile.incidents;
+  profileFields.innerHTML = `
+    <div><strong>Nom complet :</strong> ${profile.firstName} ${profile.lastName}</div>
+    <div><strong>Âge :</strong> ${profile.age}</div>
+    <div><strong>Ville :</strong> ${profile.city}</div>
+    <div><strong>Numéro national :</strong> ${profile.nid}</div>
+    <div><strong>Réf :</strong> ${profile.id}</div>
+  `;
+  // reset proof area
+  proofArea.querySelector('.small').textContent = 'Accès restreint — mot de passe juridique requis.';
+  juridPwd.value = '';
+  // remove any shown proof
+  const existingProof = document.getElementById('proofContent');
+  if(existingProof) existingProof.remove();
+  modal.style.display = 'flex';
+}
+closeModal.addEventListener('click', ()=> modal.style.display = 'none');
+
+/* ---------- validation mot de passe juridique et affichage des preuves factices ---------- */
+function checkJuridicalPwd(pw){
+  return JURIDICAL_KEYS.some(k => k.pass === pw.trim());
+}
+unlockProofBtn.addEventListener('click', ()=>{
+  const pwv = juridPwd.value.trim();
+  if(!pwv){ alert('Saisissez un mot de passe juridique (démo).'); return; }
+  if(checkJuridicalPwd(pwv)){
+    showFakeProof();
+  } else {
+    alert('Mot de passe juridique incorrect (démo).');
+  }
+});
+
+/* affichage des "preuves" factices */
+function showFakeProof(){
+  // prevent duplicates
+  if(document.getElementById('proofContent')) return;
+  const div = document.createElement('div');
+  div.id = 'proofContent';
+  div.style.marginTop = '12px';
+  // generate fake "preuve" text (base64-like) and blurred box
+  const fakeCipher = generateFakeCipherText(currentProfile);
+  div.innerHTML = `
+    <div style="font-weight:800;margin-bottom:6px">Preuves déverrouillées (fictives)</div>
+    <div style="background:#091218;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.02)">
+      <div class="small" style="margin-bottom:8px">Image (floutée) — accès restreint</div>
+      <div style="width:100%;height:140px;background:linear-gradient(90deg,#111,#0b1012);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#8aa5ac">[ IMAGE FLOUTÉE ]</div>
+      <div style="margin-top:10px" class="small">Extrait des métadonnées chiffrées :</div>
+      <pre style="background:#071214;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);color:#cfe6e9;margin-top:6px;overflow:auto">${fakeCipher}</pre>
+    </div>
+  `;
+  proofArea.appendChild(div);
+}
+
+/* génère un texte "chiffré" fictif dépendant du profil pour le réalisme */
+function generateFakeCipherText(profile){
+  // small deterministic pseudo-random "cipher" based on id
+  const base = profile.id + '|' + profile.nid + '|' + profile.firstName + profile.lastName;
+  let hash = 0;
+  for(let i=0;i<base.length;i++) hash = ((hash<<5) - hash) + base.charCodeAt(i), hash |= 0;
+  const rng = seededRandom(Math.abs(hash));
+  const lines = [];
+  for(let i=0;i<6;i++){
+    let s = '';
+    for(let j=0;j<36;j++){
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      s += chars.charAt(Math.floor(rng()*chars.length));
+    }
+    lines.push(s);
+  }
+  return lines.join('\n');
+}
+
+/* ---------- export CSV (fictionnel) ---------- */
+exportBtn.addEventListener('click', ()=>{
+  const rows = [['id','firstName','lastName','age','city','nid','incidents'].join(',')];
+  DATA.forEach(it => rows.push([it.id, it.firstName, it.lastName, it.age, it.city, it.nid, it.incidents].map(v=>`"${v}"`).join(',')));
+  const blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'fake_dossiers.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* unlock on load if session has flag */
+window.addEventListener('load', ()=>{
+  if(sessionStorage.getItem('demo_access')){
+    pwBox.style.display = 'none';
+    mainUI.style.display = 'block';
+    render();
+  }
+});
+
+/* remove session data on close */
+window.addEventListener('beforeunload', ()=>{
+  sessionStorage.removeItem('demo_access');
+});
+
+/* initial render helper */
+render();
+
+</script>
+</body>
+</html>
