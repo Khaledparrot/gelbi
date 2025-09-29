@@ -1,688 +1,1317 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Minimal Secure P2P</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure P2P Chat with Contacts</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --message-sent: #e3f2fd;
+            --message-received: #f1f1f1;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+        }
 
-<!-- QR and QR scanning libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-<style>
-  /* Minimal centered layout */
-  html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
-  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
-  .card{width:100%;max-width:520px;border:1px solid #ddd;padding:16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
-  .row{margin:8px 0;display:flex;gap:8px;align-items:center}
-  input,textarea,button{font-size:15px;padding:8px;border:1px solid #bbb;border-radius:6px;width:100%}
-  textarea{height:100px;resize:vertical}
-  button{cursor:pointer}
-  .small{width:auto;padding:8px 12px}
-  .hidden{display:none}
-  .center{text-align:center}
-  .contacts-list{max-height:180px;overflow:auto;border:1px solid #eee;padding:8px;border-radius:6px}
-  .contact-item{padding:6px;border-bottom:1px dashed #eee;display:flex;justify-content:space-between;align-items:center}
-  .status{font-size:13px;color:#666}
-  video{width:100%;border-radius:6px;background:#000}
-  .qr-box{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-</style>
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        .contacts-panel {
+            padding: 1rem;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .contact-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: #34495e;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact-item:hover {
+            background-color: #3d566e;
+        }
+
+        .contact-item.active {
+            background-color: var(--primary-color);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-name {
+            font-weight: bold;
+        }
+
+        .contact-status {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .online {
+            background-color: var(--success-color);
+        }
+
+        .offline {
+            background-color: #95a5a6;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .contact-action-btn {
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .contact-action-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .connection-panel {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .chat-area {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .empty-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #7f8c8d;
+        }
+
+        .input-area {
+            display: flex;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        input, button, textarea {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .sent {
+            background-color: var(--message-sent);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .received {
+            background-color: var(--message-received);
+        }
+
+        .system {
+            background-color: #fff3cd;
+            max-width: 90%;
+            margin: 0.5rem auto;
+            text-align: center;
+            color: #856404;
+        }
+
+        .status {
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .connected {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .disconnected {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .call-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .call-btn {
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .video-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .video-box {
+            width: 48%;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 0.5rem;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .image-message {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: bold;
+        }
+
+        .user-id {
+            font-size: 0.8rem;
+            color: #bdc3c7;
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" id="app">
-      <!-- Password screen -->
-      <div id="pwScreen">
-        <h3 class="center">Enter your password</h3>
-        <div class="row"><input id="pwInput" type="password" placeholder="Password"></div>
-        <div class="row"><button id="pwBtn">Continue</button></div>
-        <p class="status">Contacts stored locally are encrypted with this password.</p>
-      </div>
+    <header>
+        <h1>Secure P2P Chat</h1>
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-details">
+                <div class="user-name" id="userName">User</div>
+                <div class="user-id" id="userId">ID: <span id="userIdValue">Loading...</span></div>
+            </div>
+        </div>
+    </header>
 
-      <!-- Method selection -->
-      <div id="methodScreen" class="hidden">
-        <h3 class="center">Choose connection method</h3>
-        <div class="row"><button id="methodCopy" class="small">Copy / Paste</button><button id="methodQr" class="small">Use QR codes</button></div>
-        <div class="row"><button id="goContacts" class="small">Back to Contacts</button></div>
-      </div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="contacts-panel">
+                <button id="addContactBtn">Add Contact</button>
+                <button id="showMyInfoBtn">My Info</button>
+            </div>
+            <div class="contacts-list" id="contactsList">
+                <!-- Contacts will be listed here -->
+            </div>
+        </div>
 
-      <!-- Copy/paste UI -->
-      <div id="copyScreen" class="hidden">
-        <h3 class="center">Copy & Paste connection</h3>
-        <div class="row"><button id="genOfferBtn">Generate my connection (offer)</button></div>
-        <div class="row"><textarea id="offerArea" placeholder="Your offer will appear here"></textarea></div>
-        <div class="row"><p class="center">Peer's answer (paste here):</p></div>
-        <div class="row"><textarea id="answerIn" placeholder="Paste peer answer here"></textarea></div>
-        <div class="row"><button id="acceptAnswerBtn">Accept peer answer</button></div>
-        <div class="row"><button id="copyBackBtn" class="small">Back</button></div>
-        <p class="status">After handshake completes the contact will be saved (encrypted).</p>
-      </div>
+        <div class="main-content">
+            <div class="connection-panel">
+                <div id="status" class="status disconnected">Disconnected</div>
+                <div id="selectedContactInfo" class="hidden">
+                    <div>Chat with: <span id="currentContactName">-</span></div>
+                    <div>Status: <span id="currentContactStatus">-</span></div>
+                </div>
+                <div class="call-controls">
+                    <button id="callBtn" class="call-btn" disabled>Start Call</button>
+                    <button id="hangupBtn" class="call-btn" disabled>End Call</button>
+                </div>
+            </div>
 
-      <!-- QR generation/show one-by-one -->
-      <div id="qrGenScreen" class="hidden">
-        <h3 class="center">Show your 4 QR codes (one by one)</h3>
-        <div id="qrGenBox" class="qr-box"></div>
-        <div class="row"><button id="qrNextBtn" class="small">Next</button><button id="qrBackBtn" class="small">Back</button></div>
-        <p class="status">Show codes to peer in order (1 → 4).</p>
-      </div>
+            <div class="video-container hidden" id="videoContainer">
+                <div class="video-box">
+                    <video id="localVideo" autoplay muted></video>
+                    <p>Local Video</p>
+                </div>
+                <div class="video-box">
+                    <video id="remoteVideo" autoplay></video>
+                    <p>Remote Video</p>
+                </div>
+            </div>
 
-      <!-- QR scan flow -->
-      <div id="qrScanScreen" class="hidden">
-        <h3 class="center">Scan 4 QR codes in order</h3>
-        <div id="videoWrap"><video id="scanVideo" playsinline autoplay></video></div>
-        <div class="row"><button id="qrScanStart" class="small">Start Camera</button><button id="qrScanStop" class="small">Stop</button></div>
-        <div class="row"><p id="scanProgress" class="status">Scanned <span id="scannedCount">0</span>/4</p></div>
-        <div class="row"><button id="qrScanBack" class="small">Back</button></div>
-      </div>
+            <div class="chat-area" id="chatArea">
+                <div class="empty-chat" id="emptyChat">
+                    <h3>Select a contact to start chatting</h3>
+                    <p>Your messages and calls are end-to-end encrypted</p>
+                </div>
+            </div>
 
-      <!-- Contacts list -->
-      <div id="contactsScreen" class="hidden">
-        <h3 class="center">Contacts</h3>
-        <div class="contacts-list" id="contactsList"></div>
-        <div class="row"><button id="addNewBtn">Add new (choose method)</button><button id="logoutBtn" class="small">Logout (clear password)</button></div>
-      </div>
-
-      <!-- Chat -->
-      <div id="chatScreen" class="hidden">
-        <h3 id="chatTitle" class="center">Chat</h3>
-        <div id="chatHistory" style="border:1px solid #eee;padding:8px;border-radius:6px;height:200px;overflow:auto"></div>
-        <div class="row"><input id="chatInput" placeholder="Message..."><button id="chatSend" class="small">Send</button></div>
-        <div class="row"><button id="chatClose" class="small">Close Chat</button></div>
-        <p id="connStatus" class="status">Connection status: <span id="connLabel">—</span></p>
-      </div>
-
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Type your message..." disabled>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <label for="fileInput" class="file-label" id="fileLabel" title="Send Image">📷</label>
+                <button id="sendBtn" disabled>Send</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-<script>
-/* ========= Globals and storage keys ========= */
-const CONTACTS_KEY = 'secure_p2p_contacts_v1'; // encrypted contacts blob in localStorage
-let PASSWORD = null;                // stored only in sessionStorage (on success)
-let CONTACTS = [];                  // decrypted array of contacts [{id,name,data...}]
-let CURRENT_PEER = null;            // contact object when chatting
-let pc = null, dc = null;           // RTCPeerConnection & DataChannel
-let videoStream = null;
-let qrParts = [], qrIndex = 0, generatedParts = [];
-let scanParts = [];
+    <!-- Add Contact Modal -->
+    <div class="modal" id="addContactModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Contact</h3>
+                <button class="close-btn" id="closeAddContactModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="contactName">Contact Name</label>
+                <input type="text" id="contactName" placeholder="Enter contact name">
+            </div>
+            <div class="form-group">
+                <label for="contactPassword">Contact Password</label>
+                <input type="password" id="contactPassword" placeholder="Enter contact password">
+            </div>
+            <button id="saveContactBtn">Add Contact</button>
+        </div>
+    </div>
 
-/* ========= Crypto helpers using WebCrypto AES-GCM & PBKDF2 ========= */
-async function deriveKey(pw, saltBytes){
-  // PBKDF2 derive AES-GCM key
-  const enc = new TextEncoder();
-  const pwKey = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt: saltBytes, iterations: 120000, hash:'SHA-256' },
-    pwKey,
-    { name:'AES-GCM', length:256 },
-    false,
-    ['encrypt','decrypt']
-  );
-}
-async function encryptWithPassword(plaintext, pw){
-  const enc = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(pw, salt);
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(plaintext));
-  // store salt, iv, ct as base64 JSON
-  return btoa(JSON.stringify({ salt:Array.from(salt), iv:Array.from(iv), ct:Array.from(new Uint8Array(ct)) }));
-}
-async function decryptWithPassword(payloadB64, pw){
-  const obj = JSON.parse(atob(payloadB64));
-  const salt = new Uint8Array(obj.salt);
-  const iv = new Uint8Array(obj.iv);
-  const ct = new Uint8Array(obj.ct);
-  const key = await deriveKey(pw, salt);
-  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
-  return new TextDecoder().decode(pt);
-}
+    <!-- My Info Modal -->
+    <div class="modal" id="myInfoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>My Information</h3>
+                <button class="close-btn" id="closeMyInfoModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="myUserName">Your Name</label>
+                <input type="text" id="myUserName" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label>Your User ID</label>
+                <div id="myUserIdDisplay" style="padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px;"></div>
+            </div>
+            <div class="form-group">
+                <label>Your Password (share this to allow others to add you)</label>
+                <div id="myPasswordDisplay" style="padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px;"></div>
+            </div>
+            <button id="generateNewPasswordBtn">Generate New Password</button>
+            <button id="saveMyInfoBtn">Save Changes</button>
+        </div>
+    </div>
 
-/* ========= UI helpers ========= */
-function show(id){ document.getElementById('pwScreen').classList.add('hidden'); hideAll(); document.getElementById(id).classList.remove('hidden'); }
-function hideAll(){
-  ['methodScreen','copyScreen','qrGenScreen','qrScanScreen','contactsScreen','chatScreen'].forEach(i=>document.getElementById(i).classList.add('hidden'));
-}
-function alertSafe(msg){ try{ alert(msg); }catch(e){ console.log(msg); } }
+    <script>
+        // Configuration
+        const SIGNALING_SERVER = 'wss://yourusername.pythonanywhere.com/ws'; // Replace with your PythonAnywhere WebSocket URL
+        const ENCRYPTION_ALGORITHM = 'AES-GCM';
+        const KEY_LENGTH = 256;
 
-/* ========= Password flow ========= */
-document.getElementById('pwBtn').addEventListener('click', async ()=>{
-  const pw = document.getElementById('pwInput').value.trim();
-  if(!pw){ alertSafe('Please enter a password'); return; }
+        // Global variables
+        let ws = null;
+        let peerConnection = null;
+        let dataChannel = null;
+        let localStream = null;
+        let remoteStream = null;
+        let encryptionKey = null;
+        let currentRoomId = '';
+        let isInitiator = false;
+        let currentContact = null;
+        let contacts = [];
+        let userInfo = {};
+        let conversations = {};
 
-  // if contacts exist, try to decrypt them
-  const stored = localStorage.getItem(CONTACTS_KEY);
-  if(stored){
-    try{
-      const dec = await decryptWithPassword(stored, pw);
-      CONTACTS = JSON.parse(dec) || [];
-      // store password in sessionStorage only
-      sessionStorage.setItem('secure_pw', pw);
-      PASSWORD = pw;
-      showContacts();
-      return;
-    }catch(e){
-      alertSafe('Password incorrect for stored contacts. If you forgot it, contacts cannot be recovered.');
-      return;
-    }
-  }
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const contactsList = document.getElementById('contactsList');
+        const chatArea = document.getElementById('chatArea');
+        const emptyChat = document.getElementById('emptyChat');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileLabel = document.getElementById('fileLabel');
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const videoContainer = document.getElementById('videoContainer');
+        const callBtn = document.getElementById('callBtn');
+        const hangupBtn = document.getElementById('hangupBtn');
+        const addContactBtn = document.getElementById('addContactBtn');
+        const showMyInfoBtn = document.getElementById('showMyInfoBtn');
+        const addContactModal = document.getElementById('addContactModal');
+        const myInfoModal = document.getElementById('myInfoModal');
+        const closeAddContactModal = document.getElementById('closeAddContactModal');
+        const closeMyInfoModal = document.getElementById('closeMyInfoModal');
+        const saveContactBtn = document.getElementById('saveContactBtn');
+        const saveMyInfoBtn = document.getElementById('saveMyInfoBtn');
+        const generateNewPasswordBtn = document.getElementById('generateNewPasswordBtn');
+        const contactNameInput = document.getElementById('contactName');
+        const contactPasswordInput = document.getElementById('contactPassword');
+        const myUserNameInput = document.getElementById('myUserName');
+        const myUserIdDisplay = document.getElementById('myUserIdDisplay');
+        const myPasswordDisplay = document.getElementById('myPasswordDisplay');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const userIdValue = document.getElementById('userIdValue');
+        const selectedContactInfo = document.getElementById('selectedContactInfo');
+        const currentContactName = document.getElementById('currentContactName');
+        const currentContactStatus = document.getElementById('currentContactStatus');
 
-  // no contacts found -> set session password and go to method selection
-  sessionStorage.setItem('secure_pw', pw);
-  PASSWORD = pw;
-  show('methodScreen');
-});
-
-/* ========= Contacts UI ========= */
-function showContacts(){
-  show('contactsScreen');
-  renderContacts();
-}
-function renderContacts(){
-  const list = document.getElementById('contactsList');
-  list.innerHTML = '';
-  if(!CONTACTS || CONTACTS.length===0){ list.innerHTML = '<div class="center">No contacts saved</div>'; return; }
-  CONTACTS.forEach((c, idx)=>{
-    const div = document.createElement('div');
-    div.className = 'contact-item';
-    div.innerHTML = `<div><strong>${c.name||('Contact '+(idx+1))}</strong><div class="status">${new Date(c.ts).toLocaleString()}</div></div>
-                     <div><button class="small" data-idx="${idx}">Chat</button> <button class="small" data-del="${idx}">Delete</button></div>`;
-    list.appendChild(div);
-  });
-  // attach events
-  list.querySelectorAll('button[data-idx]').forEach(b=>{
-    b.addEventListener('click', async (ev)=>{
-      const idx = +ev.target.dataset.idx;
-      const c = CONTACTS[idx];
-      // start connecting to this saved contact (it contains offer/answer or remote info)
-      await startConnectionFromSaved(c);
-    });
-  });
-  list.querySelectorAll('button[data-del]').forEach(b=>{
-    b.addEventListener('click', async (ev)=>{
-      const idx = +ev.target.dataset.del;
-      if(!confirm('Delete contact?')) return;
-      CONTACTS.splice(idx,1);
-      await persistContacts();
-      renderContacts();
-    });
-  });
-}
-
-/* persist contacts encrypted using PASSWORD */
-async function persistContacts(){
-  if(!PASSWORD) { alertSafe('No password in session'); return; }
-  const json = JSON.stringify(CONTACTS);
-  const blob = await encryptWithPassword(json, PASSWORD);
-  localStorage.setItem(CONTACTS_KEY, blob);
-}
-
-/* ========= Method selection handlers ========= */
-document.getElementById('methodCopy').addEventListener('click', ()=>{ hideAll(); document.getElementById('copyScreen').classList.remove('hidden'); });
-document.getElementById('methodQr').addEventListener('click', ()=>{ hideAll(); document.getElementById('qrGenScreen').classList.remove('hidden'); });
-document.getElementById('goContacts').addEventListener('click', ()=> showContacts());
-
-/* back buttons */
-document.getElementById('copyBackBtn').addEventListener('click', ()=> show('methodScreen'));
-document.getElementById('qrBackBtn').addEventListener('click', ()=> show('methodScreen'));
-document.getElementById('qrScanBack').addEventListener('click', ()=> show('methodScreen'));
-
-/* add new contact button */
-document.getElementById('addNewBtn').addEventListener('click', ()=> show('methodScreen'));
-
-/* logout */
-document.getElementById('logoutBtn').addEventListener('click', ()=>{
-  sessionStorage.removeItem('secure_pw');
-  PASSWORD = null;
-  // go back to password screen
-  document.getElementById('pwInput').value = '';
-  show('pwScreen');
-});
-
-/* ========= WebRTC & connection helpers ========= */
-
-/* create a local offer and data channel, return base64(offer) */
-async function createLocalOffer(){
-  pc = new RTCPeerConnection();
-  dc = pc.createDataChannel('chat');
-  setupDataChannel(dc);
-  // gather all candidates automatically, but we will strip candidate lines to keep size small
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  // Wait for ICE gathering complete (or small timeout)
-  await waitForIceGathering(pc, 2500);
-  let sdp = pc.localDescription.sdp || offer.sdp || '';
-  // strip candidate lines to reduce QR length (works if relay/tURNS used)
-  sdp = sdp.replace(/a=candidate:.*\r\n/g,'').replace(/.*\.local.*\r\n/g,'');
-  return btoa(JSON.stringify({ type:'offer', sdp }));
-}
-
-/* After receiving remote answer, set it and perform handshake */
-async function finishWithAnswer(answerRaw, contactMeta){
-  try{
-    const obj = JSON.parse(atob(answerRaw));
-    if(!obj || !obj.sdp) throw new Error('Invalid answer format');
-    await pc.setRemoteDescription({ type:'answer', sdp: obj.sdp });
-  }catch(e){
-    throw new Error('Failed to set remote description: ' + e.message);
-  }
-  // handshake check
-  const ok = await performHandshakeCheck();
-  if(!ok) throw new Error('Handshake failed');
-  // persist contact info and go to chat
-  await saveContact(contactMeta);
-  openChat(contactMeta);
-}
-
-/* perform handshake: send ping with nonce, expect same nonce reply within 5s */
-function performHandshakeCheck(){
-  return new Promise((resolve)=>{
-    if(!dc || dc.readyState !== 'open'){ return resolve(false); }
-    const nonce = Math.floor(Math.random()*1e9).toString();
-    let got = false;
-    function onmsg(e){
-      try{
-        const obj = JSON.parse(e.data);
-        if(obj && obj.type==='handshake' && obj.nonce===nonce && obj.reply===true){
-          got=true;
-          dc.removeEventListener('message', onmsg);
-          resolve(true);
+        // Initialize application
+        function init() {
+            loadUserInfo();
+            loadContacts();
+            loadConversations();
+            connectWebSocket();
+            setupEventListeners();
+            updateUI();
         }
-      }catch(_){}
-    }
-    // listen for incoming handshake and reply accordingly
-    dc.addEventListener('message', function incoming(e){
-      try{
-        const obj = JSON.parse(e.data);
-        if(obj && obj.type==='handshake' && obj.nonce){
-          // reply with same nonce & reply:true
-          dc.send(JSON.stringify({type:'handshake', nonce:obj.nonce, reply:true}));
+
+        // Load user info from localStorage
+        function loadUserInfo() {
+            const savedUserInfo = localStorage.getItem('secureChatUserInfo');
+            if (savedUserInfo) {
+                userInfo = JSON.parse(savedUserInfo);
+            } else {
+                // Generate new user info
+                userInfo = {
+                    id: generateUserId(),
+                    name: 'User',
+                    password: generatePassword()
+                };
+                saveUserInfo();
+            }
+            
+            updateUserInfoDisplay();
         }
-      }catch(_){}
-    });
 
-    dc.addEventListener('message', onmsg);
-    // send handshake
-    dc.send(JSON.stringify({ type:'handshake', nonce, reply:false }));
-    // timeout
-    setTimeout(()=>{ if(!got) { try{ dc.removeEventListener('message', onmsg);}catch(_){} resolve(false);} },5000);
-  });
-}
+        // Generate a unique user ID
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9);
+        }
 
-/* helper: wait for ICE gatheringcomplete or timeout */
-function waitForIceGathering(pcRef, timeoutMs=3000){
-  return new Promise(resolve=>{
-    if(pcRef.iceGatheringState === 'complete') return resolve();
-    const id = setTimeout(()=>{ resolve(); }, timeoutMs);
-    pcRef.addEventListener('icegatheringstatechange', ()=> {
-      if(pcRef.iceGatheringState === 'complete'){ clearTimeout(id); resolve(); }
-    });
-  });
-}
+        // Generate a random password
+        function generatePassword() {
+            return Math.random().toString(36).substr(2, 12);
+        }
 
-/* Data channel setup to handle messages (text only) */
-function setupDataChannel(channel){
-  channel.onopen = ()=> {
-    console.log('DataChannel open');
-    document.getElementById('connLabel').textContent = 'Open';
-  };
-  channel.onmessage = async (ev) => {
-    try{
-      const payload = JSON.parse(ev.data);
-      // handshake messages handled elsewhere automatically
-      if(payload && payload.type==='chat'){
-        const dec = await decryptWithPassword(payload.msg, PASSWORD);
-        appendChatMessage(dec, false);
-      }
-    }catch(e){
-      console.log('msg parse error', e);
-    }
-  };
-  channel.onclose = ()=> { document.getElementById('connLabel').textContent='Closed'; };
-}
+        // Save user info to localStorage
+        function saveUserInfo() {
+            localStorage.setItem('secureChatUserInfo', JSON.stringify(userInfo));
+            updateUserInfoDisplay();
+        }
 
-/* send chat message encrypted */
-async function sendChatMessage(text){
-  if(!dc || dc.readyState !== 'open') { alertSafe('Channel not open'); return; }
-  const enc = await encryptWithPassword(text, PASSWORD);
-  dc.send(JSON.stringify({ type:'chat', msg: enc }));
-  appendChatMessage(text, true);
-}
+        // Update user info display
+        function updateUserInfoDisplay() {
+            userAvatar.textContent = userInfo.name.charAt(0).toUpperCase();
+            userName.textContent = userInfo.name;
+            userIdValue.textContent = userInfo.id;
+            myUserNameInput.value = userInfo.name;
+            myUserIdDisplay.textContent = userInfo.id;
+            myPasswordDisplay.textContent = userInfo.password;
+        }
 
-/* ========= Copy / Paste flow ========= */
-document.getElementById('genOfferBtn').addEventListener('click', async ()=>{
-  try{
-    const offerB64 = await createLocalOffer();
-    const parts = splitIntoN(offerB64, 4);
-    document.getElementById('offerArea').value = offerB64; // full option for copy
-    // also prepare QR parts for showing if needed
-    generatedParts = parts;
-    // show single-part view in qrGenScreen if user switches
-    alertSafe('Offer generated. Share to peer (copy or QR).');
-  }catch(e){
-    alertSafe('Failed to create offer: '+ e.message);
-  }
-});
+        // Load contacts from localStorage
+        function loadContacts() {
+            const savedContacts = localStorage.getItem('secureChatContacts');
+            if (savedContacts) {
+                contacts = JSON.parse(savedContacts);
+            }
+            renderContacts();
+        }
 
-/* Accept answer (paste answer into input) */
-document.getElementById('acceptAnswerBtn').addEventListener('click', async ()=>{
-  const answerRaw = document.getElementById('answerIn').value.trim();
-  if(!answerRaw){ alertSafe('Paste peer answer first'); return; }
-  // finish with answer
-  try{
-    // contact meta minimal
-    const meta = { id: Date.now().toString(), name: 'Contact '+(CONTACTS.length+1), ts:Date.now(), remote: answerRaw };
-    await finishWithAnswer(answerRaw, meta);
-    alertSafe('Connection established and contact saved.');
-    showContacts();
-  }catch(e){
-    alertSafe('Failed to finish connection: '+e.message);
-  }
-});
+        // Save contacts to localStorage
+        function saveContacts() {
+            localStorage.setItem('secureChatContacts', JSON.stringify(contacts));
+            renderContacts();
+        }
 
-/* ========= QR show / next logic (one-by-one) ========= */
-document.getElementById('qrNextBtn').addEventListener('click', ()=>{
-  if(!generatedParts || generatedParts.length===0) return;
-  qrIndex = (qrIndex + 1) % generatedParts.length;
-  drawGeneratedPart();
-});
-document.getElementById('qrBackBtn').addEventListener('click', ()=> show('methodScreen'));
-function drawGeneratedPart(){
-  const box = document.getElementById('qrGenBox');
-  box.innerHTML = '';
-  const div = document.createElement('div');
-  new QRCode(div, { text: generatedParts[qrIndex], width: 200, height: 200 });
-  box.appendChild(div);
-}
+        // Load conversations from localStorage
+        function loadConversations() {
+            const savedConversations = localStorage.getItem('secureChatConversations');
+            if (savedConversations) {
+                conversations = JSON.parse(savedConversations);
+            }
+        }
 
-/* generate full offer and split into 4, show first */
-function prepareQrOfferAndShow(){
-  createLocalOffer().then(b64=>{
-    generatedParts = splitIntoN(b64, 4);
-    qrIndex = 0;
-    drawGeneratedPart();
-  }).catch(e=>alertSafe('Failed: '+e.message));
-}
+        // Save conversations to localStorage
+        function saveConversations() {
+            localStorage.setItem('secureChatConversations', JSON.stringify(conversations));
+        }
 
-/* ========= QR scanning flow (collect 4 parts in order) ========= */
-document.getElementById('qrScanStart').addEventListener('click', ()=> startQrScan());
-document.getElementById('qrScanStop').addEventListener('click', ()=> stopQrScan());
-let scanAnimationId = null;
+        // Render contacts list
+        function renderContacts() {
+            contactsList.innerHTML = '';
+            
+            if (contacts.length === 0) {
+                contactsList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #bdc3c7;">No contacts yet</div>';
+                return;
+            }
+            
+            contacts.forEach(contact => {
+                const contactEl = document.createElement('div');
+                contactEl.className = `contact-item ${currentContact && currentContact.id === contact.id ? 'active' : ''}`;
+                contactEl.innerHTML = `
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-status">
+                            <span class="status-indicator ${contact.online ? 'online' : 'offline'}"></span>
+                            ${contact.online ? 'Online' : 'Offline'}
+                        </div>
+                    </div>
+                    <div class="contact-actions">
+                        <button class="contact-action-btn delete-contact" data-id="${contact.id}" title="Delete Contact">🗑️</button>
+                    </div>
+                `;
+                
+                contactEl.addEventListener('click', () => selectContact(contact));
+                contactsList.appendChild(contactEl);
+            });
+            
+            // Add event listeners for delete buttons
+            document.querySelectorAll('.delete-contact').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const contactId = btn.getAttribute('data-id');
+                    deleteContact(contactId);
+                });
+            });
+        }
 
-async function startQrScan(){
-  scanParts = [];
-  document.getElementById('scannedCount').textContent = '0';
-  const v = document.getElementById('scanVideo');
-  try{
-    videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } } });
-    v.srcObject = videoStream;
-    await v.play();
-    document.getElementById('qrScanScreen').classList.remove('hidden');
-    scanLoop();
-  }catch(e){
-    alertSafe('Camera not available: ' + e.message);
-  }
-}
-function stopQrScan(){
-  if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
-  const v = document.getElementById('scanVideo'); v.pause(); v.srcObject = null;
-  if(scanAnimationId) cancelAnimationFrame(scanAnimationId);
-}
-function scanLoop(){
-  const v = document.getElementById('scanVideo');
-  if(!v || v.readyState < 2){ scanAnimationId = requestAnimationFrame(scanLoop); return; }
-  const canvas = document.createElement('canvas');
-  canvas.width = v.videoWidth;
-  canvas.height = v.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-  const img = ctx.getImageData(0,0,canvas.width, canvas.height);
-  const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
-  if(code && code.data){
-    // only accept new and keep order
-    if(scanParts.length === 0 || scanParts[scanParts.length-1] !== code.data){
-      scanParts.push(code.data);
-      document.getElementById('scannedCount').textContent = String(scanParts.length);
-    }
-    // when we have 4 parts, stop and assemble
-    if(scanParts.length >= 4){
-      stopQrScan();
-      const assembled = scanParts.join('');
-      processScannedOfferOrAnswer(assembled);
-      return;
-    }
-  }
-  scanAnimationId = requestAnimationFrame(scanLoop);
-}
+        // Add a new contact
+        function addContact(name, password) {
+            // In a real app, you would verify the password with the contact's user info
+            // For this demo, we'll just create a contact with the provided info
+            
+            const newContact = {
+                id: 'contact_' + Math.random().toString(36).substr(2, 9),
+                name: name,
+                password: password, // In a real app, you wouldn't store the password
+                online: false,
+                publicKey: null // In a real app, you would exchange public keys for encryption
+            };
+            
+            contacts.push(newContact);
+            saveContacts();
+            
+            // Initialize conversation for this contact
+            if (!conversations[newContact.id]) {
+                conversations[newContact.id] = [];
+                saveConversations();
+            }
+            
+            closeModal(addContactModal);
+            contactNameInput.value = '';
+            contactPasswordInput.value = '';
+        }
 
-/* process assembled offer/answer */
-async function processScannedOfferOrAnswer(b64){
-  // if we don't have an existing pc, then we are the answering peer (we received offer)
-  if(!pc){
-    try{
-      const obj = JSON.parse(atob(b64));
-      if(!obj || !obj.sdp) throw new Error('Invalid offer');
-      // create pc and set remote, then create answer and display as 4 QR codes for peer to scan back
-      pc = new RTCPeerConnection();
-      pc.ondatachannel = (ev)=>{ dc = ev.channel; setupDataChannel(dc); };
-      await pc.setRemoteDescription({ type:'offer', sdp: obj.sdp });
-      const ans = await pc.createAnswer();
-      await pc.setLocalDescription(ans);
-      await waitForIceGathering(pc, 2500);
-      const sdp = (pc.localDescription && pc.localDescription.sdp) || ans.sdp;
-      // remove candidates to keep small
-      const sdpClean = sdp.replace(/a=candidate:.*\r\n/g,'').replace(/.*\\.local.*\\r\\n/g,'');
-      const ansB64 = btoa(JSON.stringify({ type:'answer', sdp: sdpClean }));
-      generatedParts = splitIntoN(ansB64, 4);
-      qrIndex = 0;
-      drawGeneratedPart();
-      alertSafe('Answer generated — show your 4 QR codes to peer so they can scan them back.');
-      // now wait for peer to set remote description (they will, after scanning)
-      // After they set remote, handshake check will run on their side then our side via performHandshakeCheck()
-    }catch(e){
-      alertSafe('Failed processing offer: '+ e.message);
-      pc=null;
-    }
-  } else {
-    // we already had a pc & datachannel: this is likely the answer scanned by the original offerer
-    try{
-      const obj = JSON.parse(atob(b64));
-      if(!obj || !obj.sdp) throw new Error('Invalid answer');
-      await pc.setRemoteDescription({ type:'answer', sdp: obj.sdp });
-      // handshake
-      const ok = await performHandshakeCheck();
-      if(!ok) { alertSafe('Handshake failed'); return; }
-      // save contact with minimal meta
-      const meta = { id: Date.now().toString(), name: 'Contact '+(CONTACTS.length+1), ts: Date.now(), remote: b64 };
-      await saveContact(meta);
-      openChat(meta);
-      alertSafe('Connection established and saved.');
-    }catch(e){
-      alertSafe('Failed processing answer: '+ e.message);
-    }
-  }
-}
+        // Delete a contact
+        function deleteContact(contactId) {
+            if (confirm('Are you sure you want to delete this contact?')) {
+                contacts = contacts.filter(contact => contact.id !== contactId);
+                
+                if (currentContact && currentContact.id === contactId) {
+                    currentContact = null;
+                    updateUI();
+                }
+                
+                saveContacts();
+            }
+        }
 
-/* ========= Utility: split into N pieces ========= */
-function splitIntoN(str, n){
-  const size = Math.ceil(str.length / n);
-  const out = [];
-  for(let i=0;i<n;i++) out.push(str.slice(i*size, (i+1)*size));
-  return out;
-}
+        // Select a contact to chat with
+        function selectContact(contact) {
+            currentContact = contact;
+            updateUI();
+            loadConversation(contact.id);
+            
+            // Update contact status (in a real app, this would come from the server)
+            updateContactStatus(contact.id, true);
+        }
 
-/* ========= Save contact (encrypt data and persist) ========= */
-async function saveContact(meta){
-  // meta should include remote (base64 offer/answer) so we can reconnect later
-  CONTACTS.push(meta);
-  await persistContacts();
-}
+        // Update contact status
+        function updateContactStatus(contactId, online) {
+            const contact = contacts.find(c => c.id === contactId);
+            if (contact) {
+                contact.online = online;
+                saveContacts();
+                
+                if (currentContact && currentContact.id === contactId) {
+                    currentContactStatus.textContent = online ? 'Online' : 'Offline';
+                }
+            }
+        }
 
-/* ========= Start connection to saved contact (reconnect) ========= */
-async function startConnectionFromSaved(contact){
-  // contact.remote contains base64 either offer or answer — we need to determine role
-  PASSWORD = sessionStorage.getItem('secure_pw');
-  if(!PASSWORD){ alertSafe('Session password missing. Please log in again.'); return show('pwScreen'); }
-  try{
-    const obj = JSON.parse(atob(contact.remote));
-    // If it's an offer, we must create answer (we are responder) -> same as processing scanned offer
-    // If it's answer, we are the offerer and must create new local offer? Simpler approach: treat saved remote as an offer; if it's an answer we may still try to setRemote (best effort)
-    if(obj && obj.type === 'offer'){
-      // simulate scanning an offer: call processScannedOfferOrAnswer with the base64 parts as if scanned
-      pc = new RTCPeerConnection();
-      pc.ondatachannel = (ev)=>{ dc = ev.channel; setupDataChannel(dc); };
-      await pc.setRemoteDescription({ type:'offer', sdp: obj.sdp });
-      const ans = await pc.createAnswer();
-      await pc.setLocalDescription(ans);
-      await waitForIceGathering(pc, 2500);
-      const sdpClean = (pc.localDescription.sdp || ans.sdp).replace(/a=candidate:.*\r\n/g,'');
-      const ansB64 = btoa(JSON.stringify({ type:'answer', sdp: sdpClean }));
-      // show answer as 4 QR pieces for remote to scan (but since this is reconnecting we may instead expect they are online)
-      generatedParts = splitIntoN(ansB64, 4);
-      qrIndex = 0;
-      drawGeneratedPart();
-      show('qrGenScreen');
-      alertSafe('Answer generated for this saved contact — have peer scan the QR codes.');
-    } else if(obj && obj.type === 'answer'){
-      // If we saved an answer (unusual), create a new offer instead
-      const offerB64 = await createLocalOffer();
-      generatedParts = splitIntoN(offerB64, 4);
-      qrIndex = 0;
-      drawGeneratedPart();
-      show('qrGenScreen');
-      alertSafe('Offer generated — show these to your peer.');
-    } else {
-      alertSafe('Saved contact data not understood.');
-    }
-  }catch(e){
-    alertSafe('Failed to use saved contact: '+ e.message);
-  }
-}
+        // Load conversation for a contact
+        function loadConversation(contactId) {
+            chatArea.innerHTML = '';
+            emptyChat.classList.add('hidden');
+            
+            const conversation = conversations[contactId] || [];
+            
+            if (conversation.length === 0) {
+                chatArea.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: #7f8c8d;">
+                        <h3>No messages yet</h3>
+                        <p>Start a conversation with ${currentContact.name}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            conversation.forEach(msg => {
+                addMessageToChat(msg.sender, msg.content, msg.type, false);
+            });
+        }
 
-/* ========= Chat UI and lifecycle ========= */
-function openChat(meta){
-  CURRENT_PEER = meta;
-  show('chatScreen');
-  document.getElementById('chatTitle').textContent = meta.name || 'Chat';
-  document.getElementById('connLabel').textContent = 'Testing...';
-  // load chat history from sessionStorage if any
-  const histKey = 'chat_'+meta.id;
-  const histRaw = sessionStorage.getItem(histKey);
-  const history = histRaw ? JSON.parse(histRaw) : [];
-  const container = document.getElementById('chatHistory');
-  container.innerHTML = '';
-  history.forEach(it => {
-    const d = document.createElement('div'); d.textContent = (it.me ? 'Me: ' : 'Peer: ') + it.msg; container.appendChild(d);
-  });
-  // set send button
-  document.getElementById('chatSend').onclick = async ()=>{
-    const text = document.getElementById('chatInput').value.trim();
-    if(!text) return;
-    await sendChatMessage(text);
-    saveChatMessage(meta.id, text, true);
-    document.getElementById('chatInput').value = '';
-  };
-  document.getElementById('chatClose').onclick = ()=>{ // close pc & dc and go back
-    try{ if(pc) pc.close(); }catch(_){} pc=null; dc=null; showContacts(); };
-}
+        // Add message to chat area
+        function addMessageToChat(sender, content, type, saveToHistory = true) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            
+            if (type === 'image') {
+                messageEl.innerHTML = `
+                    <strong>${sender}:</strong>
+                    <img src="${content}" class="image-message" alt="Shared image">
+                `;
+            } else {
+                messageEl.innerHTML = `<strong>${sender}:</strong> ${content}`;
+            }
+            
+            chatArea.appendChild(messageEl);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            // Save to conversation history
+            if (saveToHistory && currentContact) {
+                if (!conversations[currentContact.id]) {
+                    conversations[currentContact.id] = [];
+                }
+                
+                conversations[currentContact.id].push({
+                    sender: sender,
+                    content: content,
+                    type: type,
+                    timestamp: new Date().toISOString()
+                });
+                
+                saveConversations();
+            }
+        }
 
-/* append chat message to UI and sessionStorage */
-function appendChatMessage(text, me){
-  const container = document.getElementById('chatHistory');
-  const d = document.createElement('div'); d.textContent = (me ? 'Me: ' : 'Peer: ') + text; container.appendChild(d); container.scrollTop = container.scrollHeight;
-  if(CURRENT_PEER){
-    saveChatMessage(CURRENT_PEER.id, text, me);
-  }
-}
+        // Update UI based on current state
+        function updateUI() {
+            if (currentContact) {
+                selectedContactInfo.classList.remove('hidden');
+                currentContactName.textContent = currentContact.name;
+                currentContactStatus.textContent = currentContact.online ? 'Online' : 'Offline';
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                callBtn.disabled = !currentContact.online;
+                emptyChat.classList.add('hidden');
+            } else {
+                selectedContactInfo.classList.add('hidden');
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                callBtn.disabled = true;
+                emptyChat.classList.remove('hidden');
+            }
+            
+            renderContacts();
+        }
 
-/* save chat history in sessionStorage (cleared on tab close) */
-function saveChatMessage(contactId, text, me){
-  const key = 'chat_' + contactId;
-  const arr = sessionStorage.getItem(key) ? JSON.parse(sessionStorage.getItem(key)) : [];
-  arr.push({ ts: Date.now(), msg: text, me: !!me });
-  sessionStorage.setItem(key, JSON.stringify(arr));
-}
+        // WebSocket connection
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket(SIGNALING_SERVER);
+                
+                ws.onopen = () => {
+                    updateStatus('Connected to signaling server', 'connected');
+                };
+                
+                ws.onclose = () => {
+                    updateStatus('Disconnected from signaling server', 'disconnected');
+                    // Mark all contacts as offline
+                    contacts.forEach(contact => {
+                        contact.online = false;
+                    });
+                    saveContacts();
+                    updateUI();
+                };
+                
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateStatus('Connection error', 'disconnected');
+                };
+                
+                ws.onmessage = handleSignalingMessage;
+            } catch (error) {
+                console.error('Failed to connect to signaling server:', error);
+                updateStatus('Connection failed', 'disconnected');
+            }
+        }
 
-/* ========= utility to set up initial QR generate/scan flows ========= */
-document.getElementById('methodQr').addEventListener('click', ()=>{
-  // prepare a local offer when user chooses QR mode
-  prepareQrOfferAndShow();
-  show('qrGenScreen');
-});
+        // Handle signaling messages
+        function handleSignalingMessage(event) {
+            const message = JSON.parse(event.data);
+            
+            switch (message.type) {
+                case 'room_joined':
+                    handleRoomJoined(message);
+                    break;
+                case 'user_joined':
+                    handleUserJoined(message);
+                    break;
+                case 'offer':
+                    handleOffer(message);
+                    break;
+                case 'answer':
+                    handleAnswer(message);
+                    break;
+                case 'ice_candidate':
+                    handleIceCandidate(message);
+                    break;
+                case 'error':
+                    handleError(message);
+                    break;
+            }
+        }
 
-/* show QR scanning screen when user needs to scan (for example second peer) */
-/* Add a simple button to go to scanner by reusing method screen's choices */
-document.getElementById('qrGenBox').addEventListener('click', ()=>{}); // noop
+        // Join room with a contact
+        function joinRoomWithContact(contact) {
+            if (!contact) return;
+            
+            currentRoomId = `${userInfo.id}_${contact.id}`.split('').sort().join('');
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'join',
+                    room_id: currentRoomId,
+                    user_id: userInfo.id
+                }));
+            }
+        }
 
-/* Provide a simple path to scanning for the peer: open qrScanScreen manually from method selection */
-document.getElementById('methodQr').addEventListener('click', ()=>{/* prepared above */});
-document.getElementById('qrScanBack').addEventListener('click', ()=> show('methodScreen'));
+        // Handle room joined
+        function handleRoomJoined(message) {
+            updateStatus(`In room with ${currentContact.name}`, 'connected');
+            
+            // Generate encryption key for this session
+            generateEncryptionKey();
+            
+            // Check if we're the first user in the room
+            isInitiator = message.is_initiator;
+            
+            if (isInitiator) {
+                addMessageToChat('System', 'Secure connection established. You can now send messages.', 'system');
+            }
+        }
 
-/* For the copy/paste page, user can switch to QR generation result if they want */
-document.getElementById('offerArea').addEventListener('click', ()=>{ /* allow selection */ });
+        // Handle user joined
+        function handleUserJoined(message) {
+            updateContactStatus(currentContact.id, true);
+            addMessageToChat('System', `${currentContact.name} is online`, 'system');
+            
+            // If we're the initiator, create an offer
+            if (isInitiator) {
+                createOffer();
+            }
+        }
 
-/* Start scanning from method screen: provide a scan button on method selection by adding handler:
-   we will start scanning when the user chooses copy method and clicks "Scan" via the video flow or via explicit QR scan path */
-document.getElementById('methodCopy').addEventListener('click', ()=>{/* copy screen shown already */});
+        // Generate encryption key
+        async function generateEncryptionKey() {
+            try {
+                encryptionKey = await window.crypto.subtle.generateKey(
+                    {
+                        name: ENCRYPTION_ALGORITHM,
+                        length: KEY_LENGTH,
+                    },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+                
+                console.log('Encryption key generated');
+            } catch (error) {
+                console.error('Failed to generate encryption key:', error);
+            }
+        }
 
-/* ========= helper: start app state when loaded ========= */
-(function init(){
-  // if session password present, load contacts and go to contacts view
-  const spw = sessionStorage.getItem('secure_pw');
-  if(spw){
-    PASSWORD = spw;
-    // try load contacts
-    const stored = localStorage.getItem(CONTACTS_KEY);
-    if(stored){
-      decryptWithPassword(stored, spw).then(json=>{
-        CONTACTS = JSON.parse(json)||[];
-        showContacts();
-      }).catch(err=>{
-        // invalid session pw: clear
-        sessionStorage.removeItem('secure_pw');
-        PASSWORD = null;
-        show('pwScreen');
-      });
-    } else {
-      show('methodScreen');
-    }
-  } else {
-    show('pwScreen');
-  }
-})();
+        // Encrypt data
+        async function encryptData(data) {
+            try {
+                const encoder = new TextEncoder();
+                const encodedData = encoder.encode(data);
+                
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                
+                const encryptedData = await window.crypto.subtle.encrypt(
+                    {
+                        name: ENCRYPTION_ALGORITHM,
+                        iv: iv
+                    },
+                    encryptionKey,
+                    encodedData
+                );
+                
+                // Combine IV and encrypted data
+                const combined = new Uint8Array(iv.length + encryptedData.byteLength);
+                combined.set(iv);
+                combined.set(new Uint8Array(encryptedData), iv.length);
+                
+                // Convert to base64 for transmission
+                return btoa(String.fromCharCode(...combined));
+            } catch (error) {
+                console.error('Encryption failed:', error);
+                return null;
+            }
+        }
 
-/* ========= clean up on close ========= */
-window.addEventListener('beforeunload', ()=>{
-  // remove password from session (sessionStorage clears on tab close but be explicit)
-  sessionStorage.removeItem('secure_pw');
-  // clear chat histories
-  if(CURRENT_PEER) sessionStorage.removeItem('chat_' + CURRENT_PEER.id);
-  // stop camera
-  if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
-  try{ if(pc) pc.close(); }catch(_){}
-});
+        // Decrypt data
+        async function decryptData(encryptedData) {
+            try {
+                // Convert from base64
+                const binaryData = atob(encryptedData);
+                const combined = new Uint8Array(binaryData.length);
+                for (let i = 0; i < binaryData.length; i++) {
+                    combined[i] = binaryData.charCodeAt(i);
+                }
+                
+                // Extract IV and encrypted data
+                const iv = combined.slice(0, 12);
+                const data = combined.slice(12);
+                
+                const decryptedData = await window.crypto.subtle.decrypt(
+                    {
+                        name: ENCRYPTION_ALGORITHM,
+                        iv: iv
+                    },
+                    encryptionKey,
+                    data
+                );
+                
+                const decoder = new TextDecoder();
+                return decoder.decode(decryptedData);
+            } catch (error) {
+                console.error('Decryption failed:', error);
+                return null;
+            }
+        }
 
-/* ========= small helper to prepare offer (used when clicking method-copy -> start offer) ========= */
-/* Also allow user to start scanning answer via camera: implement a simple scanAnswer button on copyScreen -> reuse scan flow */
-document.getElementById('copyScreen').addEventListener('click', (e)=>{
-  // placeholder to keep copy screen active
-});
+        // Create WebRTC peer connection
+        function createPeerConnection() {
+            const configuration = {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' }
+                ]
+            };
+            
+            peerConnection = new RTCPeerConnection(configuration);
+            
+            // Handle incoming remote stream
+            peerConnection.ontrack = (event) => {
+                remoteStream = event.streams[0];
+                remoteVideo.srcObject = remoteStream;
+            };
+            
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    sendSignalingMessage({
+                        type: 'ice_candidate',
+                        candidate: event.candidate
+                    });
+                }
+            };
+            
+            // Create data channel for messaging
+            if (isInitiator) {
+                dataChannel = peerConnection.createDataChannel('chat');
+                setupDataChannel();
+            } else {
+                peerConnection.ondatachannel = (event) => {
+                    dataChannel = event.channel;
+                    setupDataChannel();
+                };
+            }
+        }
 
-/* Provide a button to go to QR scanner when in method screen - attach on method selection simple flow */
-document.getElementById('methodScreen').addEventListener('click', (e)=>{
-  // nothing
-});
+        // Setup data channel
+        function setupDataChannel() {
+            dataChannel.onopen = () => {
+                addMessageToChat('System', 'Secure connection established', 'system');
+            };
+            
+            dataChannel.onmessage = async (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    
+                    if (message.type === 'text') {
+                        const decryptedText = await decryptData(message.data);
+                        if (decryptedText) {
+                            addMessageToChat(currentContact.name, decryptedText, 'received');
+                        }
+                    } else if (message.type === 'image') {
+                        const decryptedData = await decryptData(message.data);
+                        if (decryptedData) {
+                            addMessageToChat(currentContact.name, decryptedData, 'received', 'image');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error processing incoming message:', error);
+                }
+            };
+        }
 
-/* Provide 'Scan' operations from copy screen: when user pasted answer they click Accept - handled above. To scan answer using camera, we'll implement a quick helper: */
-async function scanForAnswerAndFinish(){
-  // opens camera and collects 4 parts in order (same as scanLoop but synchronous one-time)
-  scanParts = [];
-  await startQrScan();
-  // processScannedOfferOrAnswer will handle assembled pieces
-}
+        // Create offer
+        async function createOffer() {
+            try {
+                createPeerConnection();
+                
+                // Add local stream if available
+                if (localStream) {
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                }
+                
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                sendSignalingMessage({
+                    type: 'offer',
+                    offer: offer
+                });
+            } catch (error) {
+                console.error('Error creating offer:', error);
+            }
+        }
 
-/* Expose for console/debug */
-window._debug = { CONTACTS, PASSWORD };
+        // Handle offer
+        async function handleOffer(message) {
+            try {
+                createPeerConnection();
+                
+                // Add local stream if available
+                if (localStream) {
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                }
+                
+                await peerConnection.setRemoteDescription(message.offer);
+                
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                sendSignalingMessage({
+                    type: 'answer',
+                    answer: answer
+                });
+            } catch (error) {
+                console.error('Error handling offer:', error);
+            }
+        }
 
-</script>
+        // Handle answer
+        async function handleAnswer(message) {
+            try {
+                await peerConnection.setRemoteDescription(message.answer);
+            } catch (error) {
+                console.error('Error handling answer:', error);
+            }
+        }
+
+        // Handle ICE candidate
+        async function handleIceCandidate(message) {
+            try {
+                await peerConnection.addIceCandidate(message.candidate);
+            } catch (error) {
+                console.error('Error adding ICE candidate:', error);
+            }
+        }
+
+        // Start call
+        async function startCall() {
+            if (!currentContact) return;
+            
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                localVideo.srcObject = localStream;
+                videoContainer.classList.remove('hidden');
+                
+                callBtn.disabled = true;
+                hangupBtn.disabled = false;
+                
+                // Join room with contact
+                joinRoomWithContact(currentContact);
+                
+                if (isInitiator) {
+                    createOffer();
+                }
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                alert('Could not access camera/microphone');
+            }
+        }
+
+        // End call
+        function endCall() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            localVideo.srcObject = null;
+            remoteVideo.srcObject = null;
+            videoContainer.classList.add('hidden');
+            
+            callBtn.disabled = false;
+            hangupBtn.disabled = true;
+            
+            addMessageToChat('System', 'Call ended', 'system');
+        }
+
+        // Send message
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || !dataChannel || dataChannel.readyState !== 'open' || !currentContact) {
+                return;
+            }
+            
+            try {
+                const encryptedText = await encryptData(text);
+                if (encryptedText) {
+                    dataChannel.send(JSON.stringify({
+                        type: 'text',
+                        data: encryptedText
+                    }));
+                    
+                    addMessageToChat('You', text, 'sent');
+                    messageInput.value = '';
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+
+        // Send image
+        async function sendImage(file) {
+            if (!file || !dataChannel || dataChannel.readyState !== 'open' || !currentContact) {
+                return;
+            }
+            
+            try {
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const imageData = event.target.result;
+                    const encryptedImage = await encryptData(imageData);
+                    
+                    if (encryptedImage) {
+                        dataChannel.send(JSON.stringify({
+                            type: 'image',
+                            data: encryptedImage
+                        }));
+                        
+                        addMessageToChat('You', imageData, 'sent', 'image');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Error sending image:', error);
+            }
+        }
+
+        // Update status
+        function updateStatus(text, statusClass) {
+            statusEl.textContent = text;
+            statusEl.className = `status ${statusClass}`;
+        }
+
+        // Send signaling message
+        function sendSignalingMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                message.room_id = currentRoomId;
+                ws.send(JSON.stringify(message));
+            }
+        }
+
+        // Handle errors
+        function handleError(message) {
+            alert(`Error: ${message.message}`);
+        }
+
+        // Modal functions
+        function openModal(modal) {
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(modal) {
+            modal.style.display = 'none';
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Contact management
+            addContactBtn.addEventListener('click', () => openModal(addContactModal));
+            showMyInfoBtn.addEventListener('click', () => openModal(myInfoModal));
+            
+            closeAddContactModal.addEventListener('click', () => closeModal(addContactModal));
+            closeMyInfoModal.addEventListener('click', () => closeModal(myInfoModal));
+            
+            saveContactBtn.addEventListener('click', () => {
+                const name = contactNameInput.value.trim();
+                const password = contactPasswordInput.value.trim();
+                
+                if (!name || !password) {
+                    alert('Please enter both name and password');
+                    return;
+                }
+                
+                addContact(name, password);
+            });
+            
+            saveMyInfoBtn.addEventListener('click', () => {
+                const name = myUserNameInput.value.trim();
+                
+                if (!name) {
+                    alert('Please enter your name');
+                    return;
+                }
+                
+                userInfo.name = name;
+                saveUserInfo();
+                closeModal(myInfoModal);
+            });
+            
+            generateNewPasswordBtn.addEventListener('click', () => {
+                userInfo.password = generatePassword();
+                saveUserInfo();
+            });
+            
+            // Chat functionality
+            callBtn.addEventListener('click', startCall);
+            hangupBtn.addEventListener('click', endCall);
+            
+            sendBtn.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    sendImage(e.target.files[0]);
+                    e.target.value = ''; // Reset file input
+                }
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === addContactModal) {
+                    closeModal(addContactModal);
+                }
+                if (e.target === myInfoModal) {
+                    closeModal(myInfoModal);
+                }
+            });
+        }
+
+        // Initialize the application
+        init();
+    </script>
 </body>
 </html>
